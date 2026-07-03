@@ -1,0 +1,644 @@
+.dtrader {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: calc(100vh - 120px);
+    background: var(--general-main-2);
+    position: relative;
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 24px;
+        background: var(--general-main-1);
+        border-bottom: 1px solid var(--border-normal);
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    &__header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    &__header-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    &__symbol-selector {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        padding: 8px 14px;
+        border: 1px solid var(--border-normal);
+        border-radius: 8px;
+        background: var(--general-main-2);
+        transition: all 0.2s ease;
+        user-select: none;
+
+        &:hover {
+            border-color: var(--brand-red-coral);
+        }
+    }
+
+    &__symbol-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-general);
+    }
+
+    &__symbol-code {
+        font-size: 11px;
+        color: var(--text-less-prominent);
+        font-family: monospace;
+    }
+
+    &__chevron {
+        font-size: 10px;
+        color: var(--text-less-prominent);
+    }
+
+    &__live-price {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        background: var(--general-main-2);
+        border: 1px solid var(--border-normal);
+        transition: all 0.3s ease;
+
+        &--up {
+            border-color: #4caf50;
+            .dtrader__live-price-value {
+                color: #4caf50;
+            }
+            .dtrader__live-price-arrow {
+                color: #4caf50;
+            }
+        }
+
+        &--down {
+            border-color: #f44336;
+            .dtrader__live-price-value {
+                color: #f44336;
+            }
+            .dtrader__live-price-arrow {
+                color: #f44336;
+            }
+        }
+
+        &--loading {
+            border-color: var(--border-normal);
+            color: var(--text-less-prominent);
+            font-size: 13px;
+            gap: 8px;
+        }
+    }
+
+    &__live-price-label {
+        font-size: 11px;
+        color: var(--text-less-prominent);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    &__live-price-value {
+        font-size: 18px;
+        font-weight: 700;
+        font-family: monospace;
+        color: var(--text-general);
+        min-width: 80px;
+    }
+
+    &__live-price-arrow {
+        font-size: 12px;
+    }
+
+    &__pulse {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--brand-red-coral);
+        display: inline-block;
+        animation: pulse-anim 1.2s infinite;
+    }
+
+    &__balance {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    &__balance-label {
+        font-size: 11px;
+        color: var(--text-less-prominent);
+        text-transform: uppercase;
+    }
+
+    &__balance-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-general);
+    }
+
+    &__auth-notice {
+        font-size: 13px;
+        color: var(--text-less-prominent);
+        padding: 6px 12px;
+        border: 1px solid var(--border-normal);
+        border-radius: 6px;
+    }
+
+    // Symbol dropdown
+    &__symbol-dropdown {
+        position: absolute;
+        top: 57px;
+        left: 24px;
+        width: 340px;
+        background: var(--general-main-1);
+        border: 1px solid var(--border-normal);
+        border-radius: 10px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        z-index: 100;
+        overflow: hidden;
+    }
+
+    &__symbol-search-wrap {
+        padding: 12px;
+        border-bottom: 1px solid var(--border-normal);
+    }
+
+    &__symbol-search {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid var(--border-normal);
+        border-radius: 6px;
+        background: var(--general-main-2);
+        color: var(--text-general);
+        font-size: 14px;
+        outline: none;
+        box-sizing: border-box;
+
+        &:focus {
+            border-color: var(--brand-red-coral);
+        }
+    }
+
+    &__symbol-list {
+        max-height: 320px;
+        overflow-y: auto;
+    }
+
+    &__symbol-empty {
+        padding: 20px;
+        text-align: center;
+        color: var(--text-less-prominent);
+        font-size: 14px;
+    }
+
+    &__symbol-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 16px;
+        cursor: pointer;
+        transition: background 0.15s;
+
+        &:hover {
+            background: var(--general-main-2);
+        }
+
+        &--active {
+            background: rgba(255, 68, 79, 0.08);
+            .dtrader__symbol-item-name {
+                color: var(--brand-red-coral);
+            }
+        }
+    }
+
+    &__symbol-item-name {
+        font-size: 13px;
+        color: var(--text-general);
+    }
+
+    &__symbol-item-code {
+        font-size: 11px;
+        color: var(--text-less-prominent);
+        font-family: monospace;
+    }
+
+    // Body layout
+    &__body {
+        display: flex;
+        flex: 1;
+        gap: 0;
+        overflow: hidden;
+    }
+
+    // Trade form
+    &__form {
+        width: 320px;
+        min-width: 280px;
+        flex-shrink: 0;
+        padding: 24px;
+        background: var(--general-main-1);
+        border-right: 1px solid var(--border-normal);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        overflow-y: auto;
+    }
+
+    &__form-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-general);
+        margin: 0;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-normal);
+    }
+
+    &__field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    &__label {
+        font-size: 12px;
+        color: var(--text-less-prominent);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    &__input {
+        padding: 10px 12px;
+        border: 1px solid var(--border-normal);
+        border-radius: 8px;
+        background: var(--general-main-2);
+        color: var(--text-general);
+        font-size: 15px;
+        outline: none;
+        width: 100%;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+
+        &:focus {
+            border-color: var(--brand-red-coral);
+        }
+
+        &--stake {
+            text-align: center;
+            font-weight: 700;
+        }
+
+        &::-webkit-inner-spin-button,
+        &::-webkit-outer-spin-button {
+            opacity: 1;
+        }
+    }
+
+    &__duration-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    &__duration-units {
+        display: flex;
+        gap: 4px;
+    }
+
+    &__unit-btn {
+        padding: 8px 10px;
+        border: 1px solid var(--border-normal);
+        border-radius: 6px;
+        background: var(--general-main-2);
+        color: var(--text-less-prominent);
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+
+        &:hover {
+            border-color: var(--brand-red-coral);
+            color: var(--brand-red-coral);
+        }
+
+        &--active {
+            background: var(--brand-red-coral);
+            border-color: var(--brand-red-coral);
+            color: white;
+
+            &:hover {
+                color: white;
+            }
+        }
+    }
+
+    &__stake-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    &__stake-adj {
+        width: 36px;
+        height: 38px;
+        border: 1px solid var(--border-normal);
+        border-radius: 8px;
+        background: var(--general-main-2);
+        color: var(--text-general);
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.2s;
+
+        &:hover {
+            border-color: var(--brand-red-coral);
+            color: var(--brand-red-coral);
+        }
+
+        &:active {
+            transform: scale(0.95);
+        }
+    }
+
+    // Payout row
+    &__payout-row {
+        display: flex;
+        gap: 8px;
+    }
+
+    &__payout-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 10px 12px;
+        border: 1px solid var(--border-normal);
+        border-radius: 8px;
+        background: var(--general-main-2);
+    }
+
+    &__payout-label {
+        font-size: 11px;
+        color: var(--text-less-prominent);
+        text-transform: uppercase;
+    }
+
+    &__payout-value {
+        font-size: 14px;
+        font-weight: 700;
+        font-family: monospace;
+
+        &--rise { color: #4caf50; }
+        &--fall { color: #f44336; }
+    }
+
+    // Buy buttons
+    &__buy-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 4px;
+    }
+
+    &__buy-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 14px 12px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+
+        &--rise {
+            background: linear-gradient(135deg, #2e7d32, #4caf50);
+            color: white;
+
+            &:hover:not(.dtrader__buy-btn--disabled) {
+                background: linear-gradient(135deg, #1b5e20, #2e7d32);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 16px rgba(76, 175, 80, 0.4);
+            }
+        }
+
+        &--fall {
+            background: linear-gradient(135deg, #b71c1c, #f44336);
+            color: white;
+
+            &:hover:not(.dtrader__buy-btn--disabled) {
+                background: linear-gradient(135deg, #7f0000, #b71c1c);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 16px rgba(244, 67, 54, 0.4);
+            }
+        }
+
+        &--disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        &:active:not(.dtrader__buy-btn--disabled) {
+            transform: translateY(0);
+        }
+    }
+
+    &__buy-arrow {
+        font-size: 14px;
+    }
+
+    &__buy-label {
+        font-size: 15px;
+    }
+
+    &__buy-spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+    }
+
+    // Status message
+    &__status {
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+
+        &--success {
+            background: rgba(76, 175, 80, 0.12);
+            color: #4caf50;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        &--error {
+            background: rgba(244, 67, 54, 0.12);
+            color: #f44336;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+    }
+
+    &__login-hint {
+        font-size: 12px;
+        color: var(--text-less-prominent);
+        text-align: center;
+        margin: 0;
+        padding: 8px;
+        background: var(--general-main-2);
+        border-radius: 6px;
+    }
+
+    // Trade history panel
+    &__history {
+        flex: 1;
+        padding: 24px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    &__history-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-general);
+        margin: 0 0 4px 0;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-normal);
+    }
+
+    &__history-empty {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: var(--text-less-prominent);
+        font-size: 14px;
+        padding: 60px 0;
+    }
+
+    &__history-hint {
+        font-size: 12px;
+        opacity: 0.7;
+    }
+
+    &__trade-card {
+        padding: 14px 16px;
+        border-radius: 10px;
+        border: 1px solid var(--border-normal);
+        background: var(--general-main-1);
+        transition: all 0.3s ease;
+
+        &--won {
+            border-color: rgba(76, 175, 80, 0.4);
+            background: rgba(76, 175, 80, 0.05);
+        }
+
+        &--lost {
+            border-color: rgba(244, 67, 54, 0.4);
+            background: rgba(244, 67, 54, 0.05);
+        }
+
+        &--open {
+            border-color: rgba(255, 152, 0, 0.3);
+        }
+    }
+
+    &__trade-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    &__trade-type {
+        font-size: 13px;
+        font-weight: 700;
+
+        &--rise { color: #4caf50; }
+        &--fall { color: #f44336; }
+    }
+
+    &__trade-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--text-less-prominent);
+    }
+
+    &__trade-open-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #ff9800;
+        animation: pulse-anim 1.5s infinite;
+        display: inline-block;
+    }
+
+    &__trade-bottom {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    &__trade-symbol {
+        font-size: 12px;
+        color: var(--text-less-prominent);
+        font-family: monospace;
+    }
+
+    &__trade-stake {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-general);
+    }
+
+    &__trade-profit {
+        font-size: 13px;
+        font-weight: 700;
+        font-family: monospace;
+
+        &--pos { color: #4caf50; }
+        &--neg { color: #f44336; }
+    }
+
+    &__trade-time {
+        font-size: 11px;
+        color: var(--text-less-prominent);
+        margin-left: auto;
+    }
+}
+
+@keyframes pulse-anim {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
