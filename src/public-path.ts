@@ -1,3 +1,11 @@
+// Seed app ID for Replit deployments so both the API and OAuth use the correct registered app.
+if (
+    (window.location.origin?.includes('.replit.dev') || window.location.origin?.includes('.repl.co')) &&
+    !window.localStorage.getItem('config.app_id')
+) {
+    window.localStorage.setItem('config.app_id', '33GHK9VzjaJYMwtL4lqo7');
+}
+
 export const getUrlBase = (path = '') => {
     const l = window.location;
 
