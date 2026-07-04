@@ -1,0 +1,1 @@
+- [DTrader implementation approach](dtrader-impl.md) — use api_base WebSocket only; dtrader-template monorepo deps can't be imported
