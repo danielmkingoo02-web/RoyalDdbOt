@@ -66,23 +66,23 @@ const PWAInstallModal: React.FC = () => {
             return [
                 localize("Look for the install icon in your browser's address bar."),
                 localize('Click the install button or use the browser menu.'),
-                localize('Follow the prompts to install Deriv Bot.'),
+                localize('Follow the prompts to install Royal Trading Tools.'),
             ];
         } else if (isIOS) {
             return [
-                localize('Open Deriv Bot in your browser.'),
+                localize('Open Royal Trading Tools in your browser.'),
                 localize('Tap the share icon (for iOS Safari)'),
                 localize('Select "Add to Home screen".'),
             ];
         } else if (isAndroid) {
             return [
-                localize('Open Deriv Bot in your browser.'),
+                localize('Open Royal Trading Tools in your browser.'),
                 localize('Tap the menu (on Chrome) or share icon (for iOS Safari)'),
                 localize('Select "Add to Home screen".'),
             ];
         } else {
             return [
-                localize('Open Deriv Bot in your browser.'),
+                localize('Open Royal Trading Tools in your browser.'),
                 localize('Tap the menu (on Chrome) or share icon (for iOS Safari)'),
                 localize('Select "Add to Home screen".'),
             ];
@@ -94,9 +94,9 @@ const PWAInstallModal: React.FC = () => {
             <div className='pwa-install-modal__description'>
                 <Text size='xs' color='prominent'>
                     {isPWALaunch
-                        ? localize("Welcome to Deriv Bot! You're using the mobile app version.")
+                        ? localize("Welcome to Royal Trading Tools! You're using the mobile app version.")
                         : isDesktop
-                          ? localize('Install Deriv Bot as a desktop app for faster access and a native experience!')
+                          ? localize('Install Royal Trading Tools as a desktop app for faster access and a native experience!')
                           : localize(
                                 "We're excited to announce that Deriv Bot platform is now a Progressive Web App (PWA)!"
                             )}

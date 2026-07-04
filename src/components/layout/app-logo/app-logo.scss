@@ -3,8 +3,39 @@
         padding-inline-start: 1.2rem;
         padding-inline-end: 2rem;
         border-inline-end: 1px solid var(--general-section-1);
-        height: 32px;
+        height: 4rem;
         display: flex;
         align-items: center;
     }
+}
+
+.royal-logo-link {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    text-decoration: none;
+    user-select: none;
+}
+
+.royal-logo-wordmark {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.royal-logo-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #b7410e;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.royal-logo-sub {
+    font-size: 1.0rem;
+    font-weight: 500;
+    color: var(--text-less-prominent);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
 }

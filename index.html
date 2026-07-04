@@ -2,36 +2,36 @@
 <html lang="en" dir="auto">
     <head>
         <meta charset="UTF-8" />
-        <link rel="icon" type="image/svg+xml" href="/deriv-logo.svg" />
+        <link rel="icon" type="image/svg+xml" href="/royal-logo.svg" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
         <!-- PWA Manifest -->
         <link rel="manifest" href="/manifest.json" />
 
         <!-- PWA Meta Tags -->
-        <meta name="theme-color" content="#ff444f" />
+        <meta name="theme-color" content="#b7410e" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Deriv Bot" />
+        <meta name="apple-mobile-web-app-title" content="Royal Trading Tools" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-TileColor" content="#ff444f" />
+        <meta name="msapplication-TileColor" content="#b7410e" />
         <meta name="msapplication-tap-highlight" content="no" />
 
         <!-- Apple Touch Icons -->
         <link rel="apple-touch-icon" href="/assets/icons/pwa/icon-152x152.png" />
         <link rel="apple-touch-icon" sizes="152x152" href="/assets/icons/pwa/icon-152x152.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/pwa/icon-192x192.png" />
-        <meta name="title" content="Build a trading bot without coding | Deriv Bot." />
+        <meta name="title" content="Royal Trading Tools — Automated &amp; Manual Trading Platform" />
         <meta
             name="description"
-            content="Import your current bot or learn how to create a trading bot from scratch with our detailed guides, FAQs, and tutorials. Start with a quick strategy!"
+            content="Build automated trading bots and trade manually on Royal Trading Tools. No coding needed for bots, full control for manual trading."
         />
-        <meta property="og:title" content="Deriv Bot" />
+        <meta property="og:title" content="Royal Trading Tools" />
         <meta
             property="og:description"
-            content="Import your current bot or learn how to create a trading bot from scratch with our detailed guides, FAQs, and tutorials. Start with a quick strategy!"
+            content="Build automated trading bots and trade manually on Royal Trading Tools."
         />
-        <title>Build a trading bot without coding | Deriv Bot.</title>
+        <title>Royal Trading Tools</title>
         <style>
             :root {
                 font-size: 62.5%;
@@ -66,7 +66,7 @@
                         i(['off', c.call(arguments)]);
                     },
                     get: function () {
-                        if (!e._h) throw new Error('[LiveChatWidget] You can’t use getters before load.');
+                        if (!e._h) throw new Error('[LiveChatWidget] You can\'t use getters before load.');
                         return i(['get', c.call(arguments)]);
                     },
                     call: function () {
@@ -89,7 +89,6 @@
 
         <!-- Browser Service Worker Prevention -->
         <script>
-            // Check browser compatibility and prevent service worker issues
             const userAgent = navigator.userAgent.toLowerCase();
             const isFirefox = userAgent.includes('firefox');
             const isSafari = userAgent.includes('safari') && !userAgent.includes('chrome');
@@ -100,8 +99,6 @@
                 console.log(
                     `[HTML] ${browserName} detected - preventing service worker registration to avoid chunk loading issues`
                 );
-
-                // Cleanup any existing service workers
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker
                         .getRegistrations()
@@ -117,16 +114,10 @@
                 }
             }
 
-            // Check online/offline status
             console.log('[HTML] Online status:', navigator.onLine);
-            window.addEventListener('online', () => {
-                console.log('[HTML] Back online');
-            });
-            window.addEventListener('offline', () => {
-                console.log('[HTML] Gone offline');
-            });
+            window.addEventListener('online', () => { console.log('[HTML] Back online'); });
+            window.addEventListener('offline', () => { console.log('[HTML] Gone offline'); });
 
-            // Listen for service worker messages if registered by PWA utils (non-problematic browsers only)
             if ('serviceWorker' in navigator && !shouldSkipSW) {
                 navigator.serviceWorker.addEventListener('message', event => {
                     console.log('[HTML] Message from service worker:', event.data);

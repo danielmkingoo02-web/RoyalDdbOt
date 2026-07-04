@@ -11,7 +11,7 @@ export const user_guide_content = (): TUserGuideContent[] => [
         id: 1,
         type: 'Tour',
         subtype: 'OnBoard',
-        content: localize('Get started on Deriv Bot'),
+        content: localize('Get started on Royal Trading Tools'),
         src: getImageLocation('dbot-onboard-tour.png'),
         search_id: `${USER_GUIDE}-0`,
     },
@@ -29,7 +29,7 @@ export const guide_content = (): TGuideContent[] => [
     {
         id: 1,
         type: 'DBotVideo',
-        content: localize('An introduction to Deriv Bot'),
+        content: localize('An introduction to Royal Trading Tools'),
         url: 'https://www.youtube.com/embed/lthEgaIY1uw',
         src: getImageLocation('intro_to_deriv_bot.png'),
         search_id: `${VIDEOS}-0`,
@@ -37,7 +37,7 @@ export const guide_content = (): TGuideContent[] => [
     {
         id: 2,
         type: 'DBotVideo',
-        content: localize('How to build a basic trading bot with Deriv Bot'),
+        content: localize('How to build a basic trading bot with Royal Trading Tools'),
         url: 'https://www.youtube.com/embed/mnpi2g7YakU',
         src: getImageLocation('build_a_bot.png'),
         search_id: `${VIDEOS}-1`,
@@ -45,7 +45,7 @@ export const guide_content = (): TGuideContent[] => [
     {
         id: 3,
         type: 'DBotVideo',
-        content: localize('How to use Martingale strategy on Deriv Bot'),
+        content: localize('How to use Martingale strategy on Royal Trading Tools'),
         url: 'https://www.youtube.com/embed/FSslvF7P00I',
         src: getImageLocation('how_to_use_martingale.jpg'),
         search_id: `${VIDEOS}-2`,
@@ -53,7 +53,7 @@ export const guide_content = (): TGuideContent[] => [
     {
         id: 4,
         type: 'DBotVideo',
-        content: localize('Introducing Accumulator Options on Deriv Bot: Available for automated trading'),
+        content: localize('Introducing Accumulator Options on Royal Trading Tools: Available for automated trading'),
         url: 'https://www.youtube.com/embed/uMBBmdNaadU',
         src: getImageLocation('introducing_accumulators_on_deriv_bot.png'),
         search_id: `${VIDEOS}-3`,
@@ -62,12 +62,12 @@ export const guide_content = (): TGuideContent[] => [
 
 export const faq_content = (): TFaqContent[] => [
     {
-        title: localize('What is Deriv Bot?'),
+        title: localize('What is Royal Trading Tools?'),
         description: [
             {
                 type: 'text',
                 content: localize(
-                    "Deriv Bot is a web-based strategy builder for trading digital options. It’s a platform where you can build your own automated trading bot using drag-and-drop 'blocks'."
+                    "Royal Trading Tools is a web-based strategy builder for trading digital options. It’s a platform where you can build your own automated trading bot using drag-and-drop 'blocks'."
                 ),
             },
         ],
@@ -148,7 +148,7 @@ export const faq_content = (): TFaqContent[] => [
         search_id: 'faq-3',
     },
     {
-        title: localize('Do you offer pre-built trading bots on Deriv Bot?'),
+        title: localize('Do you offer pre-built trading bots on Royal Trading Tools?'),
         description: [
             {
                 type: 'text',

@@ -24,7 +24,7 @@ import {
     LabelPairedPuzzlePieceTwoCaptionBoldIcon,
 } from '@deriv/quill-icons/LabelPaired';
 import { LegacyGuide1pxIcon } from '@deriv/quill-icons/Legacy';
-import { DerivProductBrandLightDerivTraderLogoWordmarkIcon as DerivTraderLogo } from '@deriv/quill-icons/Logo';
+
 import { requestOidcAuthentication } from '@deriv-com/auth-client';
 import { Localize, localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
@@ -401,9 +401,7 @@ const AppWrapper = observer(() => {
                                 </div>
                             </div>
                             <div
-                                label={
-                                    <DerivTraderLogo height={20} width={90} />
-                                }
+                                label='Manual Trading'
                                 id='id-dtrader'
                             >
                                 <div className='dtrader-wrapper'>

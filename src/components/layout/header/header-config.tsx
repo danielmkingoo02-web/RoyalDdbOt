@@ -53,10 +53,36 @@ export const platformsConfig: PlatformsConfig[] = [
     },
     {
         active: true,
-        buttonIcon: <DerivBotLogo height={25} width={94} />,
+        buttonIcon: (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '14px', color: '#b7410e' }}>
+                <svg viewBox='0 0 100 100' width='20' height='20' xmlns='http://www.w3.org/2000/svg'>
+                    <rect width='100' height='100' rx='16' fill='#b7410e' />
+                    <polygon points='14,52 14,28 30,42 50,14 70,42 86,28 86,52' fill='white' />
+                    <rect x='12' y='50' width='76' height='10' rx='4' fill='white' />
+                    <rect x='22' y='64' width='11' height='24' rx='3' fill='white' />
+                    <rect x='22' y='64' width='34' height='10' rx='5' fill='white' />
+                    <rect x='22' y='72' width='30' height='9' rx='4' fill='white' />
+                    <line x1='44' y1='79' x2='66' y2='93' stroke='white' strokeWidth='11' strokeLinecap='round' />
+                </svg>
+                Royal Bot
+            </span>
+        ),
         description: localize('Automated trading at your fingertips. No coding needed.'),
         href: standalone_routes.bot,
-        icon: <DerivBotLogo height={32} width={121} />,
+        icon: (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '18px', color: '#b7410e' }}>
+                <svg viewBox='0 0 100 100' width='28' height='28' xmlns='http://www.w3.org/2000/svg'>
+                    <rect width='100' height='100' rx='16' fill='#b7410e' />
+                    <polygon points='14,52 14,28 30,42 50,14 70,42 86,28 86,52' fill='white' />
+                    <rect x='12' y='50' width='76' height='10' rx='4' fill='white' />
+                    <rect x='22' y='64' width='11' height='24' rx='3' fill='white' />
+                    <rect x='22' y='64' width='34' height='10' rx='5' fill='white' />
+                    <rect x='22' y='72' width='30' height='9' rx='4' fill='white' />
+                    <line x1='44' y1='79' x2='66' y2='93' stroke='white' strokeWidth='11' strokeLinecap='round' />
+                </svg>
+                Royal Trading Tools
+            </span>
+        ),
         showInEU: false,
     },
     {
