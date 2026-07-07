@@ -7,7 +7,7 @@ const AnalysisTool = observer(() => {
         <div className='analysis-tool'>
             <div className='analysis-tool__iframe-container'>
                 <iframe
-                    src='https://bot-analysis-tool-belex.web.app'
+                    src='/analysis-tool.html'
                     className='analysis-tool__iframe'
                     title='Bot Analysis Tool'
                     allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'

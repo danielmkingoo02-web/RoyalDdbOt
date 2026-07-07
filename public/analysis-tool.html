@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analysis — Deriv Autotrader</title>
+<style>
+:root{
+  --bg:#0a0d12;--panel:#11161d;--panel2:#161c25;--line:#222a35;
+  --txt:#e7ecf3;--dim:#7d8a9c;--mono:'SF Mono','JetBrains Mono',Consolas,monospace;
+  --green:#1fd17a;--blue:#3b9eff;--orange:#ff9f2e;--red:#ff4d6a;--mid:#3a4350;
+  --accent:#5b8cff;--warn:#ff4d6a;--ok:#1fd17a;--purple:#b06dff;
+}
+*{box-sizing:border-box;min-width:0;}
+html,body{margin:0;overflow-x:hidden;width:100%;}
+body{background:radial-gradient(1200px 600px at 10% -10%,#121927 0%,var(--bg) 55%);
+  color:var(--txt);font-family:ui-sans-serif,Inter,system-ui,sans-serif;font-size:13px;}
+.wrap{max-width:1260px;margin:0 auto;padding:12px 12px 40px;}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+.brand{display:flex;align-items:center;gap:10px;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mid);transition:.3s;flex-shrink:0;}
+.dot.live{background:var(--ok);box-shadow:0 0 10px 2px rgba(31,209,122,.55);}
+.brand h1{font-size:13px;letter-spacing:.12em;font-weight:800;margin:0;text-transform:uppercase;}
+.brand small{display:block;color:var(--dim);font-size:10px;margin-top:1px;}
+.pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 10px;
+  font-size:11px;color:var(--dim);font-family:var(--mono);white-space:nowrap;}
+.page-nav{display:flex;gap:6px;margin-bottom:12px;}
+.pnav-link{padding:6px 14px;border-radius:7px;font-size:11px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;text-decoration:none;border:1px solid var(--line);color:var(--dim);transition:.15s;}
+.pnav-link:hover{border-color:var(--accent);color:var(--accent);}
+.pnav-link.active{background:rgba(91,140,255,.13);border-color:var(--accent);color:var(--accent);}
+/* trade-type bar */
+.tt-bar{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.tt-bar button{flex:1;min-width:100px;background:#0c1117;border:1px solid var(--line);color:var(--dim);
+  border-radius:8px;padding:8px 10px;font-size:11px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;font-family:inherit;cursor:pointer;transition:.15s;}
+.tt-bar button.active{background:rgba(91,140,255,.15);border-color:var(--accent);color:var(--accent);}
+/* layout */
+.analysis-layout{display:flex;gap:12px;align-items:flex-start;}
+.analysis-sidebar{width:164px;flex-shrink:0;background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--line);border-radius:12px;padding:11px;position:sticky;top:12px;}
+@media(max-width:640px){.analysis-layout{flex-direction:column;}.analysis-sidebar{width:100%;position:static;}}
+.analysis-main{flex:1;min-width:0;}
+.sb-head{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:700;margin:0 0 8px;}
+.sb-divider{border:none;border-top:1px solid var(--line);margin:8px 0;}
+.sb-btn{display:block;width:100%;background:transparent;border:1px solid transparent;border-radius:7px;
+  padding:7px 9px;font-size:11px;font-weight:600;font-family:inherit;color:var(--dim);
+  text-align:left;cursor:pointer;margin-bottom:4px;transition:.15s;line-height:1.3;}
+.sb-btn:hover{border-color:var(--line);color:var(--txt);}
+.sb-btn.active{background:rgba(91,140,255,.13);border-color:var(--accent);color:var(--accent);}
+.sb-count{float:right;font-size:9px;opacity:.6;font-family:var(--mono);}
+/* market grid */
+.mkt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;align-items:start;}
+.mcard{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+  border-radius:11px;padding:11px;min-width:0;cursor:pointer;transition:border-color .2s;}
+.mcard:hover{border-color:var(--mid);}
+.mcard.expanded{grid-column:1/-1;border-color:var(--accent);cursor:default;
+  box-shadow:0 0 0 1px var(--accent),0 8px 32px rgba(91,140,255,.18);}
+.mcard-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.mcard-name{font-size:11px;font-weight:700;color:var(--txt);}
+.mcard-sym{font-family:var(--mono);font-size:10px;color:var(--dim);}
+.mcard-close{background:transparent;border:1px solid var(--line);border-radius:5px;color:var(--dim);
+  font-size:11px;padding:2px 7px;cursor:pointer;font-family:inherit;}
+.mcard-close:hover{border-color:var(--red);color:var(--red);}
+/* mini circles */
+.mc-circles{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;margin-bottom:8px;}
+.mc-circle{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;position:relative;}
+.mc-cur-arrow{display:none;font-size:8px;line-height:1;margin-bottom:1px;
+  animation:arrowBob .7s ease-in-out infinite alternate;color:#fff;text-shadow:0 0 6px rgba(255,255,255,.8);}
+.mc-circle.current-digit .mc-cur-arrow{display:block;}
+@keyframes arrowBob{from{transform:translateY(0);}to{transform:translateY(3px);}}
+.mc-ring{width:100%;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-weight:700;font-size:11px;background:#0c1117;border:2px solid var(--mid);color:var(--txt);transition:.15s;}
+.mc-pct{font-family:var(--mono);font-size:9px;color:var(--dim);line-height:1;}
+.mc-circle.rank-most .mc-ring{border-color:var(--green);color:var(--green);}
+.mc-circle.rank-most .mc-pct{color:var(--green);}
+.mc-circle.rank-second .mc-ring{border-color:var(--blue);color:var(--blue);}
+.mc-circle.rank-second .mc-pct{color:var(--blue);}
+.mc-circle.rank-secondleast .mc-ring{border-color:var(--orange);color:var(--orange);}
+.mc-circle.rank-secondleast .mc-pct{color:var(--orange);}
+.mc-circle.rank-least .mc-ring{border-color:var(--red);color:var(--red);}
+.mc-circle.rank-least .mc-pct{color:var(--red);}
+/* Contender: approaching a key rank — same hue, dashed border, no glow */
+.mc-circle.rank-most.rank-contender .mc-ring{border-style:dashed;box-shadow:none;opacity:.78;}
+.mc-circle.rank-second.rank-contender .mc-ring{border-style:dashed;box-shadow:none;opacity:.78;}
+.mc-circle.rank-secondleast.rank-contender .mc-ring{border-style:dashed;box-shadow:none;opacity:.78;}
+.mc-circle.rank-least.rank-contender .mc-ring{border-style:dashed;box-shadow:none;opacity:.78;}
+.mc-circle.selected .mc-ring{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 10px rgba(91,140,255,.6);}
+.mc-circle.current-digit .mc-ring{outline:2px solid #fff;outline-offset:1px;box-shadow:0 0 14px 3px rgba(255,255,255,.3);}
+/* stat bars */
+.stat-section{margin-bottom:8px;}
+.stat-label{font-size:10px;color:var(--dim);font-family:var(--mono);margin-bottom:4px;}
+.stat-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.stat-name{font-size:10px;font-family:var(--mono);width:54px;flex-shrink:0;color:var(--dim);}
+.stat-track{flex:1;height:7px;background:#0c1117;border-radius:4px;overflow:hidden;border:1px solid var(--line);}
+.stat-fill{height:100%;border-radius:4px;transition:width .3s;}
+.stat-val{font-size:10px;font-family:var(--mono);font-weight:700;width:36px;text-align:right;flex-shrink:0;}
+.fill-green{background:var(--green);}.fill-red{background:var(--red);}.fill-blue{background:var(--blue);}
+.fill-purple{background:var(--purple);}.fill-dim{background:var(--mid);}
+.conf-badge{display:inline-block;padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700;
+  font-family:var(--mono);margin-top:5px;letter-spacing:.02em;}
+.cb-over,.cb-rise{background:rgba(31,209,122,.18);color:var(--green);}
+.cb-under,.cb-fall{background:rgba(255,77,106,.18);color:var(--red);}
+.cb-even{background:rgba(59,158,255,.18);color:var(--blue);}
+.cb-odd{background:rgba(176,109,255,.18);color:var(--purple);}
+.cb-lo{opacity:.55;}
+.no-sel{font-size:10px;color:var(--dim);font-family:var(--mono);text-align:center;padding:10px 0;font-style:italic;}
+/* stream */
+.mc-stream{display:flex;flex-wrap:nowrap;overflow:hidden;gap:2px;padding:6px 0 2px;
+  border-top:1px solid var(--line);align-items:center;justify-content:flex-end;
+  mask-image:linear-gradient(to right,transparent,black 14%);
+  -webkit-mask-image:linear-gradient(to right,transparent,black 14%);}
+.mchip{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;
+  border-radius:4px;background:#0c1117;border:1px solid var(--line);font-family:var(--mono);
+  font-size:10px;color:var(--dim);flex-shrink:0;}
+.mchip.green{background:rgba(31,209,122,.1);border-color:var(--green);color:var(--green);}
+.mchip.red{background:rgba(255,77,106,.1);border-color:var(--red);color:var(--red);}
+.mchip.blue{background:rgba(59,158,255,.1);border-color:var(--blue);color:var(--blue);}
+.mchip.purple{background:rgba(176,109,255,.1);border-color:var(--purple);color:var(--purple);}
+.mchip.orange{background:rgba(255,159,46,.1);border-color:var(--orange);color:var(--orange);}
+.mchip.dim{color:var(--mid);border-color:var(--mid);}
+.mchip.cur{width:24px;height:24px;font-size:12px;font-weight:800;border-width:2px;border-radius:6px;box-shadow:0 0 8px 1px currentColor;}
+/* streak box */
+.streak-box{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.streak-item{flex:1;min-width:70px;background:#0c1117;border:1px solid var(--line);border-radius:6px;padding:6px 8px;text-align:center;}
+.streak-item .sv{font-family:var(--mono);font-size:14px;font-weight:700;}
+.streak-item .sl{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+/* MATCHES prediction */
+.pred-box{background:#0c1117;border:1px solid var(--line);border-radius:9px;padding:10px;margin-top:4px;}
+.pred-scanning{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--dim);font-family:var(--mono);}
+.pred-scanning .spin{display:inline-block;animation:spin 1.2s linear infinite;font-size:13px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.pred-signal{display:flex;gap:10px;align-items:flex-start;}
+.pred-digit-badge{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:22px;font-weight:900;border:3px solid;flex-shrink:0;}
+.pred-info{flex:1;min-width:0;}
+.pred-rank{font-size:10px;font-family:var(--mono);margin-bottom:3px;}
+.pred-pat{font-size:10px;font-family:var(--mono);color:var(--dim);margin-bottom:6px;line-height:1.4;}
+.pred-pat b{color:var(--txt);}
+.pred-window-label{font-size:10px;font-family:var(--mono);color:var(--dim);margin-bottom:3px;}
+.pred-track{height:7px;background:#0c1117;border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:3px;}
+.pred-fill{height:100%;border-radius:4px;transition:width .3s;}
+.pred-tick-label{font-size:10px;font-family:var(--mono);font-weight:700;}
+.pred-result-box{display:flex;align-items:center;gap:8px;margin-top:4px;}
+.pred-result-icon{font-size:20px;}
+.pred-result-text{font-family:var(--mono);font-size:11px;font-weight:700;}
+.pred-result-sub{font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:2px;}
+.pred-cta{display:inline-block;margin-top:6px;padding:4px 10px;border-radius:6px;font-size:10px;
+  font-weight:700;font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase;
+  background:rgba(91,140,255,.15);border:1px solid var(--accent);color:var(--accent);}
+/* pattern table */
+.pat-table{width:100%;border-collapse:collapse;margin-top:8px;font-family:var(--mono);font-size:10px;}
+.pat-table th{color:var(--dim);font-weight:600;padding:4px 6px;text-align:left;
+  border-bottom:1px solid var(--line);font-size:9px;text-transform:uppercase;}
+.pat-table td{padding:4px 6px;border-bottom:1px solid #1a2230;}
+.pat-table tr.hit-row td{background:rgba(91,140,255,.06);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <div class="dot" id="connDot"></div>
+    <div><h1>Differs // Recovery</h1><small>Analysis Dashboard</small></div>
+  </div>
+  <span class="pill" id="dataStatusPill">market data: —</span>
+</header>
+
+<nav class="page-nav">
+  <a class="pnav-link" href="bot.html">⚡ Bot</a>
+  <span class="pnav-link active">📊 Analysis</span>
+</nav>
+
+<div class="tt-bar" id="ttBar">
+  <button class="active" data-tt="over-under">Over / Under</button>
+  <button data-tt="even-odd">Even / Odd</button>
+  <button data-tt="rise-fall">Rise / Fall</button>
+  <button data-tt="matches-differs">Matches / Differs</button>
+</div>
+
+<div class="analysis-layout">
+  <div class="analysis-sidebar">
+    <p class="sb-head">Markets</p>
+    <button class="sb-btn active" data-group="all">All markets<span class="sb-count">15</span></button>
+    <hr class="sb-divider">
+    <p class="sb-head" style="margin-top:4px;">Continuous</p>
+    <button class="sb-btn" data-group="standard">Standard<span class="sb-count">5</span></button>
+    <button class="sb-btn" data-group="1s">Speed 1s<span class="sb-count">5</span></button>
+    <hr class="sb-divider">
+    <p class="sb-head">Jump</p>
+    <button class="sb-btn" data-group="jump">Jump Indices<span class="sb-count">5</span></button>
+  </div>
+  <div class="analysis-main">
+    <div class="mkt-grid" id="mktGrid"></div>
+  </div>
+</div>
+
+</div>
+<script>
+const MARKETS=[
+  {symbol:'R_10',   name:'Volatility 10',       short:'V10'},
+  {symbol:'R_25',   name:'Volatility 25',       short:'V25'},
+  {symbol:'R_50',   name:'Volatility 50',       short:'V50'},
+  {symbol:'R_75',   name:'Volatility 75',       short:'V75'},
+  {symbol:'R_100',  name:'Volatility 100',      short:'V100'},
+  {symbol:'1HZ10V', name:'Volatility 10 (1s)',  short:'V10s'},
+  {symbol:'1HZ25V', name:'Volatility 25 (1s)',  short:'V25s'},
+  {symbol:'1HZ50V', name:'Volatility 50 (1s)',  short:'V50s'},
+  {symbol:'1HZ75V', name:'Volatility 75 (1s)',  short:'V75s'},
+  {symbol:'1HZ100V',name:'Volatility 100 (1s)', short:'V100s'},
+  {symbol:'JD10',   name:'Jump 10',             short:'J10'},
+  {symbol:'JD25',   name:'Jump 25',             short:'J25'},
+  {symbol:'JD50',   name:'Jump 50',             short:'J50'},
+  {symbol:'JD75',   name:'Jump 75',             short:'J75'},
+  {symbol:'JD100',  name:'Jump 100',            short:'J100'},
+];
+const MARKET_GROUPS={
+  all:MARKETS.map(m=>m.symbol),
+  standard:['R_10','R_25','R_50','R_75','R_100'],
+  '1s':['1HZ10V','1HZ25V','1HZ50V','1HZ75V','1HZ100V'],
+  jump:['JD10','JD25','JD50','JD75','JD100'],
+};
+
+/* ---- STATE ---- */
+let publicSock={ws:null,pending:{},reqId:0};
+const pipDecimals={},marketDigits={},marketPrices={},subscribedSymbols=new Set();
+let activeTradeType='over-under',activeMarketGroup='all',expandedMarket=null;
+const selectedDigits={};    // for over/under
+const predStates={};        // for matches/differs — per-symbol state machine
+
+const $=id=>document.getElementById(id);
+
+/* ---- WEBSOCKET ---- */
+function sendOn(sock,req){
+  return new Promise(r=>{const id=++sock.reqId;req.req_id=id;sock.pending[id]=r;sock.ws.send(JSON.stringify(req));});
+}
+function openSocket(appId,onMsg){
+  return new Promise(r=>{
+    const s={ws:null,pending:{},reqId:0};
+    s.ws=new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${appId}`);
+    s.ws.onopen=()=>r(s);
+    s.ws.onmessage=e=>{const d=JSON.parse(e.data);onMsg&&onMsg(d);if(d.req_id&&s.pending[d.req_id]){s.pending[d.req_id](d);delete s.pending[d.req_id];}};
+  });
+}
+async function boot(){
+  const appId='1089';
+  publicSock=await openSocket(appId,d=>{if(d.msg_type==='tick') handleTick(d.tick);});
+  publicSock.ws.onclose=()=>{$('connDot').classList.remove('live');$('dataStatusPill').textContent='market data: disconnected';};
+  $('connDot').classList.add('live');
+  $('dataStatusPill').textContent='market data: loading…';
+  const res=await sendOn(publicSock,{active_symbols:'brief',product_type:'basic'});
+  if(res.active_symbols) res.active_symbols.forEach(s=>{if(MARKETS.find(m=>m.symbol===s.symbol)) pipDecimals[s.symbol]=(s.pip.toString().split('.')[1]||'').length;});
+  $('dataStatusPill').textContent='market data: fetching histories…';
+  for(const m of MARKETS){
+    const r=await sendOn(publicSock,{ticks_history:m.symbol,count:1000,end:'latest',style:'ticks'});
+    if(r.history&&r.history.prices){const px=r.history.prices.map(Number);marketPrices[m.symbol]=px;marketDigits[m.symbol]=px.map(p=>lastDigit(m.symbol,p));}
+  }
+  MARKETS.forEach(m=>{if(!subscribedSymbols.has(m.symbol)){subscribedSymbols.add(m.symbol);sendOn(publicSock,{ticks:m.symbol,subscribe:1});}});
+  $('dataStatusPill').textContent='market data: live ✓';
+  renderGrid();
+}
+function lastDigit(symbol,quote){const dec=pipDecimals[symbol]??2,s=Number(quote).toFixed(dec);return Number(s[s.length-1]);}
+
+/* ---- TICK HANDLER ---- */
+function handleTick(tick){
+  const sym=tick.symbol,p=Number(tick.quote),d=lastDigit(sym,p);
+  marketPrices[sym]=marketPrices[sym]||[];marketPrices[sym].push(p);if(marketPrices[sym].length>1000)marketPrices[sym].shift();
+  marketDigits[sym]=marketDigits[sym]||[];marketDigits[sym].push(d);if(marketDigits[sym].length>1000)marketDigits[sym].shift();
+  const visible=MARKET_GROUPS[activeMarketGroup]||MARKET_GROUPS.all;
+  if(!visible.includes(sym)||!document.getElementById(`mc-${sym}`)) return;
+  if(activeTradeType==='matches-differs') stepPredState(sym);
+  renderCard(sym);
+}
+
+/* ---- DIGIT STATS ---- */
+function digitStats(hist){
+  const counts=new Array(10).fill(0);hist.forEach(d=>counts[d]++);
+  const total=hist.length||1;
+  const ranked=counts.map((c,d)=>({d,c,pct:c/total*100})).sort((a,b)=>b.c-a.c);
+  return{counts,total,ranked};
+}
+const CONTENDER_THRESH=1;
+function circleClasses(d,counts,ranked){
+  const rank=ranked.findIndex(r=>r.d===d);
+  if(rank===0) return'rank-most';
+  if(rank===1) return'rank-second';
+  if(rank===8) return'rank-secondleast';
+  if(rank===9) return'rank-least';
+  const c=counts[d];
+  if(Math.abs(c-counts[ranked[0].d])<=CONTENDER_THRESH) return'rank-most rank-contender';
+  if(Math.abs(c-counts[ranked[1].d])<=CONTENDER_THRESH) return'rank-second rank-contender';
+  if(Math.abs(c-counts[ranked[8].d])<=CONTENDER_THRESH) return'rank-secondleast rank-contender';
+  if(Math.abs(c-counts[ranked[9].d])<=CONTENDER_THRESH) return'rank-least rank-contender';
+  return'';
+}
+function rankClass(i){return i===0?'rank-most':i===1?'rank-second':i===8?'rank-secondleast':i===9?'rank-least':'';}
+function rankColor(i){return i===0?'var(--green)':i===1?'var(--blue)':i===8?'var(--orange)':i===9?'var(--red)':'var(--mid)';}
+function sideBadge(side,pct){
+  const key=side.toLowerCase();
+  const lo=Number(pct)<({'over':60,'under':60,'even':53,'odd':53,'rise':54,'fall':54}[key]||55);
+  return`conf-badge cb-${key}${lo?' cb-lo':''}`;
+}
+
+/* ---- HELPERS ---- */
+function analyzeEvenOddStreaks(hist){
+  let evS=0,odS=0,curT=null,curL=0;
+  for(const d of hist){const ie=d%2===0;if(curT===null||ie!==curT){if(curT!==null){curT?evS++:odS++;}curT=ie;curL=1;}else curL++;}
+  if(curT!==null){curT?evS++:odS++;}
+  const lt=hist.length?hist[hist.length-1]%2===0:null;
+  let sl=0;for(let i=hist.length-1;i>=0;i--){if((hist[i]%2===0)===lt) sl++;else break;}
+  return{evenStreaks:evS,oddStreaks:odS,curStreakType:lt?'even':'odd',curStreakLen:sl};
+}
+function miniStream(symbol,mode,selDigit,prices,len=30){
+  const hist=(marketDigits[symbol]||[]).slice(-len);if(!hist.length) return'';
+  let cf;
+  if(mode==='over-under'&&selDigit!==null) cf=d=>d>selDigit?'green':d<selDigit?'red':'orange';
+  else if(mode==='even-odd') cf=d=>d%2===0?'green':'red';
+  else if(mode==='rise-fall'){const ps=(prices||[]).slice(-(len+1));cf=(d,i)=>{const pi=ps.length-hist.length+i;return pi<1?'dim':ps[pi]>ps[pi-1]?'green':ps[pi]<ps[pi-1]?'red':'dim'};}
+  else{const cols=streakCols(hist);cf=(d,i)=>cols[i];}
+  return`<div class="mc-stream">${hist.map((d,i)=>`<span class="mchip ${cf(d,i)}${i===hist.length-1?' cur':''}">${d}</span>`).join('')}</div>`;
+}
+function streakCols(digits){
+  const c=new Array(digits.length);let i=0;
+  while(i<digits.length){let j=i;while(j+1<digits.length&&digits[j+1]===digits[i]) j++;const col=(j-i+1)>=2?'red':'green';for(let k=i;k<=j;k++) c[k]=col;i=j+1;}
+  return c;
+}
+function miniCircles(symbol,mode,selDigit,onClickFn){
+  const hist=marketDigits[symbol]||[];
+  const cur=hist.length?hist[hist.length-1]:null;
+  const{counts,total,ranked}=digitStats(hist);
+  let html='<div class="mc-circles">';
+  for(let d=0;d<10;d++){
+    const pct=total?(counts[d]/total*100).toFixed(1):'0.0';
+    const isCur=d===cur,isSel=selDigit===d;
+    const rClass=circleClasses(d,counts,ranked);
+    const selCls=isSel?' selected':'',curCls=isCur?' current-digit':'';
+    const clickAttr=onClickFn?`onclick="${onClickFn}('${symbol}',${d})"`:' style="cursor:default"';
+    html+=`<div class="mc-circle ${rClass}${selCls}${curCls}"${clickAttr}>
+      <div class="mc-cur-arrow">▼</div>
+      <div class="mc-ring">${d}</div>
+      <div class="mc-pct">${pct}%</div></div>`;
+  }
+  return html+'</div>';
+}
+
+/* ---- MATCHES/DIFFERS PATTERN ENGINE ---- */
+function findPattern(hist,targetDigit){
+  // Try preceding sequences of length 1-5; find the current-tail match with best hit score
+  if(hist.length<50) return null;
+  let best=null;
+  for(let len=1;len<=5;len++){
+    if(hist.length<len+1) continue;
+    const tail=hist.slice(-len);
+    const tailKey=tail.join(',');
+    // count occurrences of this sequence and how often targetDigit followed within SCAN ticks
+    const SCAN=12;
+    let seqCount=0,hitCount=0;const gaps=[];
+    for(let i=len;i<hist.length-1;i++){
+      const seq=hist.slice(i-len,i).join(',');
+      if(seq!==tailKey) continue;
+      seqCount++;
+      for(let j=i;j<Math.min(i+SCAN,hist.length);j++){
+        if(hist[j]===targetDigit){hitCount++;gaps.push(j-i+1);break;}
+      }
+    }
+    if(seqCount<5||hitCount<3) continue;
+    const hitRate=hitCount/seqCount;
+    if(hitRate<0.22) continue;
+    const avgGap=gaps.reduce((a,b)=>a+b,0)/gaps.length;
+    const maxGap=Math.max(...gaps);
+    const score=hitCount*hitRate/Math.sqrt(avgGap+1);
+    if(!best||score>best.score){
+      best={len,seqDisplay:tail.join('→'),seqCount,hitCount,hitRate,avgGap:+(avgGap.toFixed(1)),
+        windowSize:Math.min(Math.ceil(maxGap)+2,14),score};
+    }
+  }
+  return best;
+}
+
+function initPredState(symbol){
+  const hist=marketDigits[symbol]||[];
+  const{ranked}=digitStats(hist);
+  return{phase:'scanning',targetDigit:ranked[0]?.d??null,targetRank:'most',
+    targetPct:+(ranked[0]?.pct.toFixed(1)??0),pattern:null,ticksWatched:0,
+    matched:false,matchedAt:null,confirmDelay:0};
+}
+
+function stepPredState(symbol){
+  const hist=marketDigits[symbol]||[];
+  if(hist.length<10) return;
+  const lastD=hist[hist.length-1];
+  const{ranked}=digitStats(hist);
+  if(!predStates[symbol]) predStates[symbol]=initPredState(symbol);
+  let s=predStates[symbol];
+  // Always keep target updated to current most/2nd most
+  s.targetDigit=ranked[0].d;s.targetRank='most';s.targetPct=+ranked[0].pct.toFixed(1);
+
+  if(s.phase==='scanning'){
+    // Try most-appearing first, then second-most
+    for(let ri=0;ri<2;ri++){
+      const td=ranked[ri].d;
+      const pat=findPattern(hist,td);
+      if(pat){
+        s={phase:'watching',targetDigit:td,targetRank:ri===0?'most':'2nd most',
+          targetPct:+ranked[ri].pct.toFixed(1),pattern:pat,
+          windowSize:pat.windowSize,ticksWatched:0,matched:false,matchedAt:null,confirmDelay:0};
+        break;
+      }
+    }
+  } else if(s.phase==='watching'){
+    s.ticksWatched++;
+    if(lastD===s.targetDigit){s.matched=true;s.matchedAt=s.ticksWatched;s.phase='confirmed';}
+    else if(s.ticksWatched>=s.windowSize){s.phase='confirmed';}
+  } else if(s.phase==='confirmed'){
+    s.confirmDelay++;
+    if(s.confirmDelay>=10) s=initPredState(symbol); // reset after showing result for 10 ticks
+  }
+  predStates[symbol]=s;
+}
+
+function renderMatchesPred(symbol,isExp){
+  const hist=marketDigits[symbol]||[];
+  if(hist.length<10) return`<div class="pred-box"><div class="pred-scanning"><span class="spin">⟳</span>Loading history…</div></div>`;
+  if(!predStates[symbol]) predStates[symbol]=initPredState(symbol);
+  const s=predStates[symbol];
+  const{ranked}=digitStats(hist);
+  const ro={};ranked.forEach((r,i)=>ro[r.d]=i);
+  const col=rankColor(ro[s.targetDigit??0]);
+
+  if(s.phase==='scanning'){
+    return`<div class="pred-box">
+      <div class="pred-scanning"><span class="spin">⟳</span>&nbsp;Scanning for pattern leading to digit <b style="color:${col}">${s.targetDigit??'—'}</b> (${s.targetRank}, ${s.targetPct}%)</div>
+    </div>`;
+  }
+  const pat=s.pattern;
+  const progress=s.phase==='confirmed'?100:Math.min((s.ticksWatched/s.windowSize)*100,100);
+  const fillColor=s.phase==='confirmed'?(s.matched?'var(--green)':'var(--red)'):'var(--accent)';
+
+  let statusHTML='';
+  if(s.phase==='watching'){
+    statusHTML=`
+      <div class="pred-cta">▶ Trade MATCHES ${s.targetDigit} now</div>
+      <div style="margin-top:6px;">
+        <div class="pred-window-label">Window: tick ${s.ticksWatched} of ${s.windowSize}</div>
+        <div class="pred-track"><div class="pred-fill" style="width:${progress}%;background:${fillColor};"></div></div>
+        <div class="pred-tick-label" style="color:var(--accent)">⏱ Watching… ${s.windowSize-s.ticksWatched} tick${s.windowSize-s.ticksWatched===1?'':'s'} remaining</div>
+      </div>`;
+  } else if(s.phase==='confirmed'){
+    if(s.matched){
+      statusHTML=`
+        <div class="pred-track" style="margin-top:6px;"><div class="pred-fill" style="width:100%;background:var(--green);"></div></div>
+        <div class="pred-result-box">
+          <span class="pred-result-icon">✅</span>
+          <div><div class="pred-result-text" style="color:var(--green)">MATCHED — tick ${s.matchedAt} of ${s.windowSize}</div>
+          <div class="pred-result-sub">Digit ${s.targetDigit} appeared within window. Rescanning…</div></div>
+        </div>`;
+    } else {
+      statusHTML=`
+        <div class="pred-track" style="margin-top:6px;"><div class="pred-fill" style="width:100%;background:var(--red);"></div></div>
+        <div class="pred-result-box">
+          <span class="pred-result-icon">❌</span>
+          <div><div class="pred-result-text" style="color:var(--red)">NOT IN WINDOW — ${s.windowSize} ticks elapsed</div>
+          <div class="pred-result-sub">Digit ${s.targetDigit} did not appear. Rescanning…</div></div>
+        </div>`;
+    }
+  }
+
+  let patTableHTML='';
+  if(isExp&&s.phase!=='scanning'){
+    // Show all digits' pattern stats
+    const rows=ranked.map(r=>{
+      const td=r.d,testPat=findPattern(hist,td);
+      const isTarget=td===s.targetDigit;
+      const rc=rankColor(ro[td]);
+      if(!testPat) return`<tr><td style="color:${rc};font-weight:700">${td}</td><td style="color:${rc}">${r.c}× (${r.pct.toFixed(1)}%)</td><td style="color:var(--mid)">no strong pattern</td><td>—</td><td>—</td></tr>`;
+      return`<tr class="${isTarget?'hit-row':''}">
+        <td style="color:${rc};font-weight:700">${td}</td>
+        <td style="color:${rc}">${r.c}× (${r.pct.toFixed(1)}%)</td>
+        <td style="color:var(--txt)">${testPat.seqDisplay}</td>
+        <td style="color:var(--txt)">${testPat.hitCount}/${testPat.seqCount} (${(testPat.hitRate*100).toFixed(0)}%)</td>
+        <td style="color:var(--dim)">avg ${testPat.avgGap}t / win ${testPat.windowSize}t</td>
+      </tr>`;
+    }).join('');
+    patTableHTML=`<table class="pat-table" style="margin-top:10px;">
+      <thead><tr><th>Digit</th><th>Frequency</th><th>Trigger seq.</th><th>Hit rate</th><th>Window</th></tr></thead>
+      <tbody>${rows}</tbody></table>`;
+  }
+
+  return`<div class="pred-box">
+    <div class="pred-signal">
+      <div class="pred-digit-badge" style="border-color:${col};color:${col}">${s.targetDigit}</div>
+      <div class="pred-info">
+        <div class="pred-rank" style="color:${col}"><b>${s.targetRank}</b> appearing · ${s.targetPct}%</div>
+        <div class="pred-pat">Pattern: <b>${pat?.seqDisplay||'—'}</b> → ${s.targetDigit}<br>
+          ${pat?`${pat.hitCount} hits / ${pat.seqCount} occurrences · ${(pat.hitRate*100).toFixed(0)}% hit rate · avg ${pat.avgGap} ticks`:''}
+        </div>
+        ${statusHTML}
+      </div>
+    </div>
+    ${patTableHTML}
+  </div>`;
+}
+
+/* ---- RENDER ---- */
+function renderGrid(){
+  const grid=$('mktGrid');grid.innerHTML='';
+  const visible=MARKET_GROUPS[activeMarketGroup]||MARKET_GROUPS.all;
+  if(expandedMarket&&!visible.includes(expandedMarket)) expandedMarket=null;
+  MARKETS.filter(m=>visible.includes(m.symbol)).forEach(m=>{
+    const card=document.createElement('div');
+    card.className='mcard'+(expandedMarket===m.symbol?' expanded':'');
+    card.id=`mc-${m.symbol}`;
+    card.addEventListener('click',e=>{
+      if(e.target.closest('.mc-circle')||e.target.closest('.mcard-close')) return;
+      if(expandedMarket===m.symbol) return;
+      expandedMarket=m.symbol;renderGrid();
+    });
+    grid.appendChild(card);
+    renderCard(m.symbol);
+  });
+}
+
+function renderCard(symbol){
+  const card=document.getElementById(`mc-${symbol}`);if(!card) return;
+  const m=MARKETS.find(x=>x.symbol===symbol);
+  const hist=marketDigits[symbol]||[];const prices=marketPrices[symbol]||[];
+  const{counts,total,ranked}=digitStats(hist);
+  const ro={};ranked.forEach((r,i)=>ro[r.d]=i);
+  const isExp=expandedMarket===symbol;
+  const streamLen=isExp?80:30;
+  const tt=activeTradeType;
+  const sel=selectedDigits[symbol]??null;
+  const cur=hist.length?hist[hist.length-1]:null;
+  const closeBtn=isExp?`<button class="mcard-close" onclick="collapseCard()">✕ collapse</button>`:'';
+  let body='';
+
+  if(tt==='over-under'){
+    body+=miniCircles(symbol,'over-under',sel,'selectDigit');
+    if(sel===null){body+=`<div class="no-sel">tap a digit to analyse over / under</div>`;}
+    else{
+      const ov=hist.filter(d=>d>sel).length,un=hist.filter(d=>d<sel).length,eq=hist.filter(d=>d===sel).length;
+      const vt=total-eq||1;
+      const ovPct=(ov/total*100).toFixed(1),unPct=(un/total*100).toFixed(1),eqPct=(eq/total*100).toFixed(1);
+      const ovAdj=(ov/vt*100).toFixed(1),unAdj=(un/vt*100).toFixed(1);
+      const dom=ov>=un?'over':'under';const adjPct=dom==='over'?ovAdj:unAdj;
+      body+=`<div class="stat-section">
+        ${isExp?`<div class="stat-label">Barrier: <b style="color:var(--txt)">${sel}</b> — last ${hist.length} ticks</div>`:''}
+        <div class="stat-row"><span class="stat-name">Over ${sel}</span><div class="stat-track"><div class="stat-fill fill-green" style="width:${ovPct}%"></div></div><span class="stat-val" style="color:var(--green)">${ovPct}%</span></div>
+        <div class="stat-row"><span class="stat-name">Under ${sel}</span><div class="stat-track"><div class="stat-fill fill-red" style="width:${unPct}%"></div></div><span class="stat-val" style="color:var(--red)">${unPct}%</span></div>
+        <div class="stat-row"><span class="stat-name">Equals ${sel}</span><div class="stat-track"><div class="stat-fill fill-dim" style="width:${eqPct}%"></div></div><span class="stat-val" style="color:var(--dim)">${eqPct}%</span></div>
+        <span class="${sideBadge(dom,adjPct)}">▶ ${dom==='over'?'Over':'Under'} ${sel} · ${adjPct}% adj. conf.</span>
+      </div>`;
+    }
+    body+=miniStream(symbol,sel===null?'streak':'over-under',sel,prices,streamLen);
+
+  } else if(tt==='even-odd'){
+    body+=miniCircles(symbol,'even-odd',null,null);
+    const evC=hist.filter(d=>d%2===0).length,odC=hist.filter(d=>d%2!==0).length;
+    const evP=(evC/total*100).toFixed(1),odP=(odC/total*100).toFixed(1);
+    const sk=analyzeEvenOddStreaks(hist);
+    const skBias=sk.oddStreaks>sk.evenStreaks?'Odd':'Even';
+    const curCol=sk.curStreakType==='even'?'var(--green)':'var(--red)';
+    // Digit dominance analysis
+    const EVEN_D=[0,2,4,6,8],ODD_D=[1,3,5,7,9];
+    const evenAbove10=EVEN_D.filter(d=>(counts[d]/total*100)>10).length;
+    const oddAbove10=ODD_D.filter(d=>(counts[d]/total*100)>10).length;
+    const top1Even=ranked[0].d%2===0,top2Even=ranked[1].d%2===0;
+    const evenDominance=evenAbove10>=4&&top1Even&&top2Even;
+    const oddDominance=oddAbove10>=4&&!top1Even&&!top2Even;
+    let prediction,strength,reasoning;
+    if(evenDominance&&skBias==='Even'){
+      prediction='Even';strength='strong';
+      reasoning=`${evenAbove10}/5 even digits >10% · top-2 both even · streak confirms`;
+    } else if(oddDominance&&skBias==='Odd'){
+      prediction='Odd';strength='strong';
+      reasoning=`${oddAbove10}/5 odd digits >10% · top-2 both odd · streak confirms`;
+    } else if(evenDominance){
+      prediction='Even';strength='moderate';
+      reasoning=`${evenAbove10}/5 even digits >10% · top-2 both even · streak bias: ${skBias}`;
+    } else if(oddDominance){
+      prediction='Odd';strength='moderate';
+      reasoning=`${oddAbove10}/5 odd digits >10% · top-2 both odd · streak bias: ${skBias}`;
+    } else {
+      const rawDom=evC>=odC?'Even':'Odd';
+      prediction=rawDom===skBias?rawDom:(Math.abs(sk.oddStreaks-sk.evenStreaks)>5?skBias:rawDom);
+      strength='low';
+      reasoning=`raw lead: ${evC>=odC?'even':'odd'} (${Math.max(Number(evP),Number(odP))}%) · streak bias: ${skBias}`;
+    }
+    const predColor=prediction==='Even'?'var(--green)':'var(--red)';
+    const strengthLabel=strength==='strong'?'STRONG SIGNAL':strength==='moderate'?'MODERATE':'LOW CONFIDENCE';
+    const badgeCls=`conf-badge cb-${prediction.toLowerCase()}${strength==='low'?' cb-lo':''}`;
+    body+=`<div class="stat-section">
+      <div class="stat-row"><span class="stat-name">Even</span>
+        <div class="stat-track"><div class="stat-fill fill-green" style="width:${evP}%"></div></div>
+        <span class="stat-val" style="color:var(--green)">${evP}%</span></div>
+      <div class="stat-row"><span class="stat-name">Odd</span>
+        <div class="stat-track"><div class="stat-fill fill-red" style="width:${odP}%"></div></div>
+        <span class="stat-val" style="color:var(--red)">${odP}%</span></div>
+      <div style="font-size:10px;font-family:var(--mono);color:var(--dim);margin-top:4px;line-height:1.6;">
+        Even >10%: <b style="color:var(--green)">${evenAbove10}/5</b>
+        &nbsp;·&nbsp; Odd >10%: <b style="color:var(--red)">${oddAbove10}/5</b>
+        &nbsp;·&nbsp; Top-2: <b style="color:${top1Even?'var(--green)':'var(--red)'}">${ranked[0].d}</b><span style="color:var(--dim)">,</span><b style="color:${top2Even?'var(--green)':'var(--red)'}">${ranked[1].d}</b>
+      </div>
+      ${isExp?`<div class="streak-box" style="margin-top:6px;">
+        <div class="streak-item"><div class="sv" style="color:var(--green)">${sk.evenStreaks}</div><div class="sl">Even runs</div></div>
+        <div class="streak-item"><div class="sv" style="color:var(--red)">${sk.oddStreaks}</div><div class="sl">Odd runs</div></div>
+        <div class="streak-item"><div class="sv" style="color:${curCol}">${sk.curStreakLen}</div><div class="sl">Current run</div></div>
+      </div>
+      <div style="font-size:10px;font-family:var(--mono);color:var(--dim);margin-top:4px;">
+        Now: <b style="color:${curCol}">${sk.curStreakType} ×${sk.curStreakLen}</b>
+        &nbsp;·&nbsp; Streak bias: <b style="color:${skBias==='Even'?'var(--green)':'var(--red)'}">${skBias}</b>
+      </div>`:''}
+      <div style="margin-top:6px;">
+        <span class="${badgeCls}">▶ ${prediction} &nbsp;·&nbsp; ${strengthLabel}</span>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--dim);margin-top:4px;">${reasoning}</div>
+      </div>
+    </div>`;
+    body+=miniStream(symbol,'even-odd',null,prices,streamLen);
+
+  } else if(tt==='rise-fall'){
+    body+=miniCircles(symbol,'rise-fall',null,null);
+    let ri=0,fa=0,sa=0;for(let i=1;i<prices.length;i++){if(prices[i]>prices[i-1]) ri++;else if(prices[i]<prices[i-1]) fa++;else sa++;}
+    const rft=ri+fa+sa||1;const rP=(ri/rft*100).toFixed(1),fP=(fa/rft*100).toFixed(1),sP=(sa/rft*100).toFixed(1);
+    const dom=ri>=fa?'rise':'fall';const adj=ri+fa||1;const domP=(Math.max(ri,fa)/adj*100).toFixed(1);
+    body+=`<div class="stat-section">
+      <div class="stat-row"><span class="stat-name">Rise</span><div class="stat-track"><div class="stat-fill fill-green" style="width:${rP}%"></div></div><span class="stat-val" style="color:var(--green)">${rP}%</span></div>
+      <div class="stat-row"><span class="stat-name">Fall</span><div class="stat-track"><div class="stat-fill fill-red" style="width:${fP}%"></div></div><span class="stat-val" style="color:var(--red)">${fP}%</span></div>
+      <div class="stat-row"><span class="stat-name">No chg</span><div class="stat-track"><div class="stat-fill fill-dim" style="width:${sP}%"></div></div><span class="stat-val" style="color:var(--dim)">${sP}%</span></div>
+      <span class="${sideBadge(dom,domP)}">▶ ${dom==='rise'?'Rise':'Fall'} · ${domP}% adj. conf.</span>
+    </div>`;
+    body+=miniStream(symbol,'rise-fall',null,prices,streamLen);
+
+  } else if(tt==='matches-differs'){
+    body+=miniCircles(symbol,'matches-differs',null,null);
+    body+=renderMatchesPred(symbol,isExp);
+    body+=miniStream(symbol,'streak',null,prices,streamLen);
+  }
+
+  card.innerHTML=`<div class="mcard-head">
+    <span class="mcard-name">${m.name}<span style="font-weight:400;color:var(--dim);font-size:10px;margin-left:5px;">${m.symbol}</span></span>
+    ${closeBtn}
+  </div>${body}`;
+}
+
+function selectDigit(symbol,digit){
+  const nv=selectedDigits[symbol]===digit?null:digit;
+  MARKETS.forEach(m=>{selectedDigits[m.symbol]=nv;});
+  renderGrid();
+}
+function collapseCard(){expandedMarket=null;renderGrid();}
+
+/* ---- EVENT WIRING ---- */
+document.querySelectorAll('#ttBar button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    activeTradeType=b.dataset.tt;
+    document.querySelectorAll('#ttBar button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    renderGrid();
+  });
+});
+document.querySelectorAll('.sb-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    activeMarketGroup=b.dataset.group;
+    document.querySelectorAll('.sb-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    renderGrid();
+  });
+});
+
+boot();
+// Hide page-nav when running inside the dashboard
+if(window.top!==window){const n=document.querySelector('.page-nav');if(n) n.style.display='none';}
+</script>
+</body>
+</html>
