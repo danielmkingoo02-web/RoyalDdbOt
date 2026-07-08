@@ -39,6 +39,7 @@ const Tutorial = lazy(() => import('../tutorials'));
 const FreeBots = lazy(() => import('../free-bots'));
 const AnalysisTool = lazy(() => import('../analysis-tool'));
 const DTrader = lazy(() => import('../dtrader'));
+const Autotrades = lazy(() => import('../autotrades'));
 
 const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
@@ -70,7 +71,16 @@ const AppWrapper = observer(() => {
     const { clear } = summary_card;
     const { DASHBOARD, BOT_BUILDER } = DBOT_TABS;
     const init_render = React.useRef(true);
-    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial', 'free_bots', 'analysis_tool', 'dtrader'];
+    const hash = [
+        'dashboard',
+        'bot_builder',
+        'chart',
+        'tutorial',
+        'free_bots',
+        'analysis_tool',
+        'dtrader',
+        'autotrades',
+    ];
     const { isDesktop } = useDevice();
     const location = useLocation();
     const navigate = useNavigate();
@@ -411,6 +421,29 @@ const AppWrapper = observer(() => {
                                         }
                                     >
                                         <DTrader />
+                                    </Suspense>
+                                </div>
+                            </div>
+                            <div
+                                label={
+                                    <>
+                                        <LabelPairedPuzzlePieceTwoCaptionBoldIcon
+                                            height='24px'
+                                            width='24px'
+                                            fill='var(--text-general)'
+                                        />
+                                        <Localize i18n_default_text='Autotrades' />
+                                    </>
+                                }
+                                id='id-autotrades'
+                            >
+                                <div className='autotrades-wrapper'>
+                                    <Suspense
+                                        fallback={
+                                            <ChunkLoader message={localize('Please wait, loading Autotrades...')} />
+                                        }
+                                    >
+                                        <Autotrades />
                                     </Suspense>
                                 </div>
                             </div>

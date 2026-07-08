@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bot — Deriv Autotrader</title>
+<style>
+:root{
+  --bg:#0a0d12;--panel:#11161d;--panel2:#161c25;--line:#222a35;
+  --txt:#e7ecf3;--dim:#7d8a9c;--mono:'SF Mono','JetBrains Mono',Consolas,monospace;
+  --green:#1fd17a;--blue:#3b9eff;--orange:#ff9f2e;--red:#ff4d6a;--mid:#3a4350;
+  --accent:#5b8cff;--warn:#ff4d6a;--ok:#1fd17a;
+}
+*{box-sizing:border-box;min-width:0;}
+html,body{margin:0;overflow-x:hidden;width:100%;}
+body{background:radial-gradient(1200px 600px at 10% -10%,#121927 0%,var(--bg) 55%);
+  color:var(--txt);font-family:ui-sans-serif,Inter,system-ui,sans-serif;font-size:13px;}
+.wrap{max-width:1100px;margin:0 auto;padding:12px 12px 40px;}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+.brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mid);transition:.3s;flex-shrink:0;}
+.dot.live{background:var(--ok);box-shadow:0 0 10px 2px rgba(31,209,122,.55);}
+.brand h1{font-size:13px;letter-spacing:.12em;font-weight:800;margin:0;text-transform:uppercase;}
+.brand small{display:block;color:var(--dim);font-size:10px;margin-top:1px;}
+.acct-pills{display:flex;flex-direction:column;gap:3px;margin-left:4px;}
+.pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 10px;
+  font-size:11px;color:var(--dim);font-family:var(--mono);white-space:nowrap;}
+.pill b{color:var(--txt);}
+.page-nav{display:flex;gap:6px;margin-bottom:12px;}
+.pnav-link{padding:6px 14px;border-radius:7px;font-size:11px;font-weight:700;letter-spacing:.05em;
+  text-transform:uppercase;text-decoration:none;border:1px solid var(--line);color:var(--dim);transition:.15s;}
+.pnav-link:hover{border-color:var(--accent);color:var(--accent);}
+.pnav-link.active{background:rgba(91,140,255,.13);border-color:var(--accent);color:var(--accent);}
+.grid{display:grid;grid-template-columns:300px 1fr;gap:12px;}
+@media(max-width:760px){.grid{grid-template-columns:1fr;}}
+.card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+  border-radius:12px;padding:13px;min-width:0;}
+.card h2{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin:0 0 10px;font-weight:700;}
+label{display:block;font-size:10px;color:var(--dim);margin:8px 0 3px;}
+input,select{width:100%;background:#0c1117;border:1px solid var(--line);color:var(--txt);
+  border-radius:7px;padding:7px 9px;font-size:12px;font-family:var(--mono);outline:none;}
+input:focus,select:focus{border-color:var(--accent);}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.btn{cursor:pointer;border:none;border-radius:7px;padding:7px 12px;font-size:11px;font-weight:700;
+  letter-spacing:.03em;text-transform:uppercase;font-family:inherit;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--txt);}
+.btn-stop{background:var(--warn);color:#fff;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-row{display:flex;gap:6px;margin-top:10px;}
+.acct-toggle{display:flex;gap:5px;margin-top:5px;}
+.acct-toggle button{flex:1;}
+.acct-toggle button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+hr.sep{border:none;border-top:1px solid var(--line);margin:11px 0;}
+.status-line{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);
+  font-family:var(--mono);margin-top:5px;gap:8px;}
+.status-line b{color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mode-tag{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;font-family:var(--mono);}
+.mode-IDLE{background:#222a35;color:var(--dim);}
+.mode-DIFFERS{background:rgba(91,140,255,.15);color:var(--accent);}
+.mode-RECOVERY{background:rgba(255,159,46,.15);color:var(--orange);}
+.pl-box{display:flex;gap:8px;margin-top:10px;}
+.pl-box .item{flex:1;background:#0c1117;border:1px solid var(--line);border-radius:8px;padding:8px;text-align:center;}
+.pl-box .item .v{font-family:var(--mono);font-size:16px;font-weight:700;}
+.pl-box .item .l{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+.pos{color:var(--ok);}.neg{color:var(--warn);}
+.hint{width:100%;background:transparent;border:none;color:var(--dim);font-size:10px;
+  font-family:var(--mono);resize:none;}
+/* circles */
+.circles{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-top:4px;}
+@media(max-width:540px){.circles{grid-template-columns:repeat(5,1fr);}}
+.circle{display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;}
+.circle .cur-arrow{display:none;font-size:10px;line-height:1;margin-bottom:2px;
+  animation:arrowBob .7s ease-in-out infinite alternate;color:#fff;text-shadow:0 0 8px rgba(255,255,255,.9);}
+.circle.current-digit .cur-arrow{display:block;}
+@keyframes arrowBob{from{transform:translateY(0);}to{transform:translateY(3px);}}
+.circle .ring{width:100%;max-width:40px;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-weight:700;font-size:13px;background:#0c1117;border:3px solid var(--mid);color:var(--txt);transition:.2s;}
+.circle .pct{font-family:var(--mono);font-size:10.5px;color:var(--dim);}
+.circle.rank-most .ring{border-color:var(--green);color:var(--green);box-shadow:0 0 10px -2px rgba(31,209,122,.5);}
+.circle.rank-most .pct{color:var(--green);}
+.circle.rank-second .ring{border-color:var(--blue);color:var(--blue);box-shadow:0 0 10px -2px rgba(59,158,255,.5);}
+.circle.rank-second .pct{color:var(--blue);}
+.circle.rank-secondleast .ring{border-color:var(--orange);color:var(--orange);}
+.circle.rank-secondleast .pct{color:var(--orange);}
+.circle.rank-least .ring{border-color:var(--red);color:var(--red);}
+.circle.rank-least .pct{color:var(--red);}
+/* Contender: approaching a key rank — same hue, dashed border, no glow */
+.circle.rank-most.rank-contender .ring{border-style:dashed;box-shadow:none;opacity:.78;}
+.circle.rank-second.rank-contender .ring{border-style:dashed;box-shadow:none;opacity:.78;}
+.circle.rank-secondleast.rank-contender .ring{border-style:dashed;box-shadow:none;opacity:.78;}
+.circle.rank-least.rank-contender .ring{border-style:dashed;box-shadow:none;opacity:.78;}
+.circle.current-digit .ring{outline:2px solid #fff;outline-offset:2px;
+  box-shadow:0 0 0 3px rgba(255,255,255,.08),0 0 18px 4px rgba(255,255,255,.35);}
+/* stream */
+.stream-wrap{display:flex;flex-wrap:nowrap;overflow:hidden;gap:3px;padding:10px 4px;
+  border-top:1px solid var(--line);margin-top:10px;align-items:center;justify-content:flex-end;
+  mask-image:linear-gradient(to right,transparent 0%,black 12%);
+  -webkit-mask-image:linear-gradient(to right,transparent 0%,black 12%);}
+.dchip{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;
+  border-radius:5px;background:#0c1117;border:1px solid var(--line);font-family:var(--mono);
+  font-size:11px;color:var(--dim);flex-shrink:0;animation:chipIn .18s ease-out;}
+.dchip.green{background:rgba(31,209,122,.10);border-color:var(--green);color:var(--green);}
+.dchip.red{background:rgba(255,77,106,.10);border-color:var(--red);color:var(--red);}
+.dchip.current{width:34px;height:34px;font-size:15px;font-weight:800;border-radius:8px;border-width:2px;
+  z-index:1;position:relative;animation:chipIn .18s ease-out,pulseCurrent 1.4s ease-in-out infinite;}
+@keyframes chipIn{from{opacity:0;transform:translateX(8px) scale(.82);}to{opacity:1;transform:none;}}
+@keyframes pulseCurrent{0%,100%{box-shadow:0 0 10px 2px currentColor;}50%{box-shadow:0 0 22px 5px currentColor;}}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:8px;}
+.legend span{display:inline-flex;align-items:center;gap:4px;}
+.legend i{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+/* log */
+.log{max-height:280px;overflow-y:auto;font-family:var(--mono);font-size:11px;margin-top:4px;}
+.log table{width:100%;border-collapse:collapse;}
+.log th{text-align:left;color:var(--dim);font-weight:600;padding:5px 7px;position:sticky;top:0;
+  background:var(--panel2);font-size:10px;text-transform:uppercase;letter-spacing:.04em;}
+.log td{padding:5px 7px;border-top:1px solid var(--line);}
+.win{color:var(--ok);}.loss{color:var(--warn);}
+.b-DIFFERS{background:rgba(91,140,255,.15);color:var(--accent);padding:1px 5px;border-radius:4px;font-size:10px;}
+.b-RECOVERY{background:rgba(255,159,46,.15);color:var(--orange);padding:1px 5px;border-radius:4px;font-size:10px;}
+/* auth error */
+.auth-err{display:none;background:rgba(255,77,106,.1);border:1px solid rgba(255,77,106,.3);
+  border-radius:7px;padding:8px 10px;font-size:11px;color:var(--red);font-family:var(--mono);
+  margin-top:8px;line-height:1.6;white-space:pre-wrap;}
+a{color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <div class="dot" id="connDot"></div>
+    <div><h1>Differs // Recovery</h1><small>Deriv Autotrader</small></div>
+    <div class="acct-pills">
+      <span class="pill" id="loginPill">not connected</span>
+      <span class="pill">Balance&nbsp;<b id="balPill">—</b></span>
+    </div>
+  </div>
+  <span class="pill" id="dataStatusPill" style="font-size:10px;">market data: —</span>
+</header>
+
+<nav class="page-nav">
+  <span class="pnav-link active">⚡ Bot</span>
+  <a class="pnav-link" href="analysis.html">📊 Analysis</a>
+</nav>
+
+<div class="grid">
+
+  <!-- LEFT: controls -->
+  <div class="card">
+    <h2>Connection</h2>
+
+    <!-- App ID -->
+    <label>App ID
+      <span style="font-weight:400;color:var(--dim);"> — use <b style="color:var(--txt)">1089</b> (Deriv shared demo) or
+        <a href="https://app.deriv.com/appstore/app-registration" target="_blank">register yours</a>
+      </span>
+    </label>
+    <input id="appId" value="1089">
+
+    <!-- Token section — primary method -->
+    <div style="margin-top:10px;background:#0c1117;border:1px solid var(--line);border-radius:8px;padding:10px;">
+      <div style="font-size:11px;color:var(--txt);font-weight:700;margin-bottom:6px;">API Token (recommended)</div>
+      <div style="font-size:10px;color:var(--dim);line-height:1.6;margin-bottom:8px;">
+        1. Go to <a href="https://app.deriv.com/account/api-token" target="_blank" style="color:var(--accent)">app.deriv.com → Account → API Token</a><br>
+        2. Create a new token — enable <b style="color:var(--txt)">Trade</b> and <b style="color:var(--txt)">Account management</b> scopes<br>
+        &nbsp;&nbsp;&nbsp;<span style="color:var(--dim);font-size:9px;">("Read" no longer exists — use these two instead)</span><br>
+        3. Copy the token and paste below<br>
+        4. Leave App ID as <b style="color:var(--txt)">1089</b> — do not change it
+      </div>
+      <div class="row">
+        <div><label>Demo token</label><input id="tokenDemo" type="password" placeholder="paste demo token…" autocomplete="off"></div>
+        <div><label>Real token</label><input id="tokenReal" type="password" placeholder="paste real token…" autocomplete="off"></div>
+      </div>
+    </div>
+
+    <!-- OAuth section — secondary -->
+    <details style="margin-top:8px;">
+      <summary style="cursor:pointer;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;">OAuth login (advanced)</summary>
+      <div style="font-size:10px;color:var(--dim);line-height:1.5;margin-top:6px;">
+        Register your own app at <a href="https://app.deriv.com/appstore/app-registration" target="_blank" style="color:var(--accent)">app.deriv.com → App Registration</a>, set the Redirect URL to:<br>
+        <span id="thisPageUrl" style="font-family:var(--mono);font-size:10px;color:var(--orange);word-break:break-all;display:block;margin:4px 0;"></span>
+        Then enter your App ID above and click Log in.
+      </div>
+      <button class="btn btn-ghost" id="oauthLoginBtn" style="width:100%;margin-top:8px;">🔑 Log in with Deriv</button>
+      <div class="status-line" style="margin-top:6px;"><span>OAuth session</span><b id="oauthStatusVal">none</b></div>
+    </details>
+
+    <div class="acct-toggle">
+      <button class="btn btn-ghost active" id="useDemoBtn">Demo</button>
+      <button class="btn btn-ghost" id="useRealBtn">Real</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="connectBtn" style="flex:1">Connect</button>
+    </div>
+    <div class="auth-err" id="authErr"></div>
+
+    <hr class="sep">
+    <h2>Market &amp; Risk</h2>
+    <label>Differs market</label>
+    <select id="marketSelect"></select>
+    <div class="row">
+      <div><label>Base stake</label><input id="stake" type="number" value="1" min="0.35" step="0.01"></div>
+      <div><label>Martingale ×</label><input id="martingale" type="number" value="2.1" min="1" step="0.1"></div>
+    </div>
+    <div class="row">
+      <div><label>Take profit</label><input id="tp" type="number" value="10" min="0" step="0.5"></div>
+      <div><label>Stop loss</label><input id="sl" type="number" value="10" min="0" step="0.5"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="startBtn" style="flex:1" disabled>Start Bot</button>
+      <button class="btn btn-stop" id="stopBtn" style="flex:1" disabled>Stop</button>
+    </div>
+    <div class="status-line"><span>Mode</span><span class="mode-tag mode-IDLE" id="modeTag">IDLE</span></div>
+    <div class="status-line"><span>Symbol</span><b id="activeSymbol">—</b></div>
+    <div class="status-line"><span>Next stake</span><b id="nextStake">—</b></div>
+    <div class="pl-box">
+      <div class="item"><div class="v" id="plVal">0.00</div><div class="l">P/L</div></div>
+      <div class="item"><div class="v" id="tradeCount">0</div><div class="l">Trades</div></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: analytics -->
+  <div class="card">
+    <h2>Last digit distribution — <span id="circlesLabel">—</span> (last 1000 ticks)</h2>
+    <div class="circles" id="circles"></div>
+    <div class="legend">
+      <span><i style="background:var(--green)"></i>most</span>
+      <span><i style="background:var(--blue)"></i>2nd most</span>
+      <span><i style="background:var(--mid)"></i>mid</span>
+      <span><i style="background:var(--orange)"></i>2nd least</span>
+      <span><i style="background:var(--red)"></i>least</span>
+    </div>
+    <div class="stream-wrap" id="stream"></div>
+    <div class="legend" style="margin-top:4px;">
+      <span><i style="background:var(--green)"></i>isolated digit</span>
+      <span><i style="background:var(--red)"></i>streak</span>
+    </div>
+    <hr class="sep">
+    <h2>Trade log</h2>
+    <div class="log">
+      <table>
+        <thead><tr><th>Time</th><th>Mode</th><th>Symbol</th><th>Contract</th><th>Stake</th><th>P/L</th></tr></thead>
+        <tbody id="logBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</div>
+<script>
+const MARKETS=[
+  {symbol:'R_10',name:'Volatility 10'},{symbol:'R_25',name:'Volatility 25'},
+  {symbol:'R_50',name:'Volatility 50'},{symbol:'R_75',name:'Volatility 75'},
+  {symbol:'R_100',name:'Volatility 100'},{symbol:'1HZ10V',name:'Volatility 10 (1s)'},
+  {symbol:'1HZ25V',name:'Volatility 25 (1s)'},{symbol:'1HZ50V',name:'Volatility 50 (1s)'},
+  {symbol:'1HZ75V',name:'Volatility 75 (1s)'},{symbol:'1HZ100V',name:'Volatility 100 (1s)'},
+  {symbol:'JD10',name:'Jump 10'},{symbol:'JD25',name:'Jump 25'},
+  {symbol:'JD50',name:'Jump 50'},{symbol:'JD75',name:'Jump 75'},{symbol:'JD100',name:'Jump 100'},
+];
+const CONF_THRESH=10;
+let publicSock={ws:null,pending:{},reqId:0};
+let tradeSock={ws:null,pending:{},reqId:0};
+const contractWatchers=new Map();
+const pipDecimals={};
+const marketDigits={};
+const marketPrices={};
+const subscribedSymbols=new Set();
+const oauthTokens={demo:null,real:null};
+const oauthLoginIds={demo:null,real:null};
+let activeAccount='demo',accountCurrency='USD';
+let running=false,mode='IDLE',baseStake=1,currentStake=1,sessionPL=0,tradeCount=0;
+let tradeInFlight=false,recoveryLock=false;
+
+const $=id=>document.getElementById(id);
+const marketSelect=$('marketSelect');
+MARKETS.forEach(m=>{const o=document.createElement('option');o.value=m.symbol;o.textContent=m.name;marketSelect.appendChild(o);});
+const saved=localStorage.getItem('differs_symbol');
+if(saved&&MARKETS.find(m=>m.symbol===saved)) marketSelect.value=saved;
+$('thisPageUrl').textContent=location.href.split('?')[0].split('#')[0];
+
+function sendOn(sock,req){
+  return new Promise(r=>{const id=++sock.reqId;req.req_id=id;sock.pending[id]=r;sock.ws.send(JSON.stringify(req));});
+}
+function openSocket(appId,onMsg){
+  return new Promise(r=>{
+    const s={ws:null,pending:{},reqId:0};
+    s.ws=new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${appId}`);
+    s.ws.onopen=()=>r(s);
+    s.ws.onmessage=e=>{const d=JSON.parse(e.data);onMsg&&onMsg(d);if(d.req_id&&s.pending[d.req_id]){s.pending[d.req_id](d);delete s.pending[d.req_id];}};
+  });
+}
+async function bootPublicData(){
+  const appId=$('appId').value.trim()||'1089';
+  if(publicSock.ws&&publicSock.ws.readyState===1) publicSock.ws.close();
+  publicSock=await openSocket(appId,d=>{if(d.msg_type==='tick') handleTick(d.tick);});
+  publicSock.ws.onclose=()=>{$('connDot').classList.remove('live');$('dataStatusPill').textContent='market data: disconnected';};
+  $('connDot').classList.add('live');
+  $('dataStatusPill').textContent='market data: loading…';
+  const res=await sendOn(publicSock,{active_symbols:'brief',product_type:'basic'});
+  if(res.active_symbols) res.active_symbols.forEach(s=>{if(MARKETS.find(m=>m.symbol===s.symbol)) pipDecimals[s.symbol]=(s.pip.toString().split('.')[1]||'').length;});
+  $('dataStatusPill').textContent='market data: fetching…';
+  for(const m of MARKETS) await loadHistory(m.symbol);
+  MARKETS.forEach(m=>{if(!subscribedSymbols.has(m.symbol)){subscribedSymbols.add(m.symbol);sendOn(publicSock,{ticks:m.symbol,subscribe:1});}});
+  refreshBotUI();
+  $('dataStatusPill').textContent='market data: live ✓';
+}
+async function loadHistory(symbol){
+  const res=await sendOn(publicSock,{ticks_history:symbol,count:1000,end:'latest',style:'ticks'});
+  if(res.history&&res.history.prices){
+    const prices=res.history.prices.map(Number);
+    marketPrices[symbol]=prices;
+    marketDigits[symbol]=prices.map(p=>lastDigit(symbol,p));
+  }
+}
+function lastDigit(symbol,quote){
+  const dec=pipDecimals[symbol]??2,s=Number(quote).toFixed(dec);return Number(s[s.length-1]);
+}
+function handleTick(tick){
+  const sym=tick.symbol,p=Number(tick.quote),d=lastDigit(sym,p);
+  marketPrices[sym]=marketPrices[sym]||[];marketPrices[sym].push(p);if(marketPrices[sym].length>1000) marketPrices[sym].shift();
+  marketDigits[sym]=marketDigits[sym]||[];marketDigits[sym].push(d);if(marketDigits[sym].length>1000) marketDigits[sym].shift();
+  if(sym===marketSelect.value){renderCircles();renderStream();}
+  if(!running) return;
+  // Differs: fire one trade per tick on the selected market
+  if(mode==='DIFFERS'&&sym===marketSelect.value&&!tradeInFlight) fireDiffersTrade();
+  // Recovery: wait for analysis to confirm a signal, then fire
+  if(mode==='RECOVERY'&&!tradeInFlight&&!recoveryLock){const c=bestRecovery();if(c) fireRecovery(c);}
+}
+function digitStats(hist){
+  const counts=new Array(10).fill(0);hist.forEach(d=>counts[d]++);
+  const total=hist.length||1;
+  const ranked=counts.map((c,d)=>({d,c,pct:c/total*100})).sort((a,b)=>b.c-a.c);
+  return{counts,total,ranked};
+}
+const CONTENDER_THRESH=1; // within ~0.1% of a key rank's count
+function circleClasses(d,counts,ranked){
+  const rank=ranked.findIndex(r=>r.d===d);
+  if(rank===0) return'rank-most';
+  if(rank===1) return'rank-second';
+  if(rank===8) return'rank-secondleast';
+  if(rank===9) return'rank-least';
+  // mid-range digit — check if approaching a key rank
+  const c=counts[d];
+  if(Math.abs(c-counts[ranked[0].d])<=CONTENDER_THRESH) return'rank-most rank-contender';
+  if(Math.abs(c-counts[ranked[1].d])<=CONTENDER_THRESH) return'rank-second rank-contender';
+  if(Math.abs(c-counts[ranked[8].d])<=CONTENDER_THRESH) return'rank-secondleast rank-contender';
+  if(Math.abs(c-counts[ranked[9].d])<=CONTENDER_THRESH) return'rank-least rank-contender';
+  return'';
+}
+function rankClass(i){return i===0?'rank-most':i===1?'rank-second':i===8?'rank-secondleast':i===9?'rank-least':'';}
+function refreshBotUI(){
+  $('activeSymbol').textContent=marketSelect.value;
+  $('circlesLabel').textContent=MARKETS.find(m=>m.symbol===marketSelect.value)?.name||marketSelect.value;
+  renderCircles();renderStream();
+}
+function renderCircles(){
+  const hist=marketDigits[marketSelect.value]||[];
+  const cur=hist.length?hist[hist.length-1]:null;
+  const{counts,total,ranked}=digitStats(hist);
+  const w=$('circles');w.innerHTML='';
+  for(let d=0;d<10;d++){
+    const pct=total?(counts[d]/total*100).toFixed(1):'0.0';
+    const el=document.createElement('div');
+    el.className=`circle ${circleClasses(d,counts,ranked)}${d===cur?' current-digit':''}`;
+    el.innerHTML=`<div class="cur-arrow">▼</div><div class="ring">${d}</div><div class="pct">${pct}%</div>`;
+    w.appendChild(el);
+  }
+}
+function streakColors(digits){
+  const c=new Array(digits.length);let i=0;
+  while(i<digits.length){let j=i;while(j+1<digits.length&&digits[j+1]===digits[i]) j++;const col=(j-i+1)>=2?'red':'green';for(let k=i;k<=j;k++) c[k]=col;i=j+1;}
+  return c;
+}
+function renderStream(){
+  const hist=(marketDigits[marketSelect.value]||[]).slice(-80);
+  const cols=streakColors(hist);
+  $('stream').innerHTML=hist.map((d,i)=>`<span class="dchip ${cols[i]}${i===hist.length-1?' current':''}">${d}</span>`).join('');
+}
+/* trading */
+async function connect(){
+  const appId=$('appId').value.trim()||'1089';
+  hideErr();$('connectBtn').disabled=true;$('connectBtn').textContent='Connecting…';
+  if(tradeSock.ws) tradeSock.ws.close();
+  tradeSock=await openSocket(appId,d=>{if(d.msg_type==='proposal_open_contract') handlePOC(d.proposal_open_contract);});
+  tradeSock.ws.onclose=()=>{$('loginPill').textContent='disconnected';$('startBtn').disabled=true;};
+  $('connectBtn').textContent='Reconnect';$('connectBtn').disabled=false;
+  await authorizeActive();$('startBtn').disabled=false;
+}
+async function authorizeActive(){
+  hideErr();
+  const token=oauthTokens[activeAccount]||(activeAccount==='demo'?$('tokenDemo').value.trim():$('tokenReal').value.trim());
+  if(!token){
+    showErr('No token found.\n\nHow to fix:\n1. Go to app.deriv.com/account/api-token\n2. Create a token with Trade + Account management scopes\n3. Paste it into the token field above\n4. Make sure App ID is 1089');
+    $('loginPill').textContent=`no ${activeAccount} token`;return;
+  }
+  $('loginPill').textContent='authorising…';
+  const res=await sendOn(tradeSock,{authorize:token});
+  if(res.error){
+    const code=res.error.code||'';
+    let hint='';
+    if(code==='InvalidToken'){
+      hint='\n\nHow to fix:\n'+
+        '• Go to app.deriv.com/account/api-token\n'+
+        '• Create a NEW token — select Trade + Account management scopes\n'+
+        '  (there is no "Read" scope — ignore any older instructions mentioning it)\n'+
+        '• Keep App ID as 1089 — do not change it\n'+
+        '• Make sure you are pasting the token for the correct account type (Demo / Real)';
+    } else if(code==='RateLimit'){
+      hint='\n\nToo many requests. Wait a moment and try again.';
+    } else if(code==='AppError'){
+      hint='\n\nApp ID issue — ensure the App ID field is set to 1089.';
+    }
+    showErr(`Deriv error: ${res.error.message}${hint}`);
+    $('loginPill').textContent='auth failed';return;
+  }
+  const a=res.authorize;accountCurrency=a.currency;
+  $('loginPill').innerHTML=`<b>${a.loginid}</b> (${activeAccount})`;
+  $('balPill').textContent=`${parseFloat(a.balance).toFixed(2)} ${a.currency}`;
+  hideErr();
+}
+function showErr(msg){const e=$('authErr');e.style.display='block';e.textContent=msg;}
+function hideErr(){$('authErr').style.display='none';}
+let oauthTimer=null;
+function oauthPopup(){
+  const appId=$('appId').value.trim()||'1089';
+  if(oauthTimer) clearInterval(oauthTimer);
+  const popup=window.open(`https://oauth.deriv.com/oauth2/authorize?app_id=${appId}`,'deriv_oauth','width=560,height=700,scrollbars=yes');
+  if(!popup||popup.closed){showErr('Popup blocked — allow popups for this page.');return;}
+  $('oauthLoginBtn').textContent='⏳ Waiting…';$('oauthLoginBtn').disabled=true;
+  oauthTimer=setInterval(()=>{
+    try{
+      if(popup.closed){clearInterval(oauthTimer);$('oauthLoginBtn').textContent='🔑 Log in with Deriv';$('oauthLoginBtn').disabled=false;return;}
+      const pu=new URL(popup.location.href);
+      if(pu.searchParams.has('acct1')){
+        clearInterval(oauthTimer);popup.close();
+        $('oauthLoginBtn').textContent='🔑 Log in with Deriv';$('oauthLoginBtn').disabled=false;
+        let i=1;
+        while(pu.searchParams.has(`acct${i}`)){
+          const acct=pu.searchParams.get(`acct${i}`),token=pu.searchParams.get(`token${i}`);
+          const slot=/^VR/i.test(acct)?'demo':'real';
+          if(token){oauthTokens[slot]=token;oauthLoginIds[slot]=acct;}i++;
+        }
+        updateOauthUI();connect();
+      }
+    }catch(e){}
+  },500);
+}
+function parseOAuthRedirect(){
+  const p=new URLSearchParams(location.search);if(!p.has('acct1')) return false;
+  let i=1,found=false;
+  while(p.has(`acct${i}`)){const acct=p.get(`acct${i}`),token=p.get(`token${i}`);const slot=/^VR/i.test(acct)?'demo':'real';if(token&&!oauthTokens[slot]){oauthTokens[slot]=token;oauthLoginIds[slot]=acct;found=true;}i++;}
+  if(found) history.replaceState({},document.title,location.pathname);return found;
+}
+function updateOauthUI(){
+  const p=[];if(oauthLoginIds.demo) p.push(`demo:${oauthLoginIds.demo}`);if(oauthLoginIds.real) p.push(`real:${oauthLoginIds.real}`);
+  $('oauthStatusVal').textContent=p.length?p.join(' · '):'none';
+}
+function topTwo(){const{ranked}=digitStats(marketDigits[marketSelect.value]||[]);return[ranked[0].d,ranked[1].d];}
+function randBarrier(ex){const pool=[0,1,2,3,4,5,6,7,8,9].filter(d=>!ex.includes(d));return pool[Math.floor(Math.random()*pool.length)];}
+async function placeTrade(symbol,contractType,barrier,stake,note=''){
+  tradeInFlight=true;
+  const res=await sendOn(tradeSock,{buy:1,price:stake,parameters:{amount:stake,basis:'stake',contract_type:contractType,currency:accountCurrency,duration:1,duration_unit:'t',symbol,barrier:String(barrier)}});
+  if(res.error){addLog(`buy error: ${res.error.message}`,mode,symbol,contractType,stake,null);tradeInFlight=false;return{error:true};}
+  const cid=res.buy.contract_id;
+  sendOn(tradeSock,{proposal_open_contract:1,contract_id:cid,subscribe:1});
+  const poc=await new Promise(r=>contractWatchers.set(cid,r));
+  tradeInFlight=false;
+  const profit=Number(poc.profit);tradeCount++;sessionPL+=profit;
+  addLog(null,mode,symbol,`${contractType} ${barrier}${note}`,stake,profit);updateStatusUI();
+  return{won:profit>0,profit};
+}
+function handlePOC(poc){
+  if(poc.is_sold&&contractWatchers.has(poc.contract_id)){
+    const r=contractWatchers.get(poc.contract_id);contractWatchers.delete(poc.contract_id);sendOn(tradeSock,{forget:poc.id});r(poc);
+  }
+}
+// Differs: called once per tick — places one 1-tick DIGITDIFF trade then returns immediately
+function fireDiffersTrade(){
+  const sym=marketSelect.value,barrier=randBarrier(topTwo());
+  placeTrade(sym,'DIGITDIFF',barrier,currentStake).then(({won,error})=>{
+    if(error) return;
+    if(checkTPSL()) return;
+    if(won){
+      currentStake=baseStake;
+    } else {
+      mode='RECOVERY';
+      currentStake=roundStake(baseStake*Number($('martingale').value));
+      updateStatusUI();
+    }
+  });
+}
+function evalMarket(symbol){
+  const hist=marketDigits[symbol]||[];if(hist.length<100) return null;
+  const last3=hist.slice(-3);let contractType,barrier,losingZone;
+  if(last3.every(d=>d<3)){contractType='DIGITOVER';barrier=3;losingZone=[0,1,2];}
+  else if(last3.every(d=>d>6)){contractType='DIGITUNDER';barrier=6;losingZone=[7,8,9];}
+  else return null;
+  const{counts,total,ranked}=digitStats(hist);
+  const top2=[ranked[0].d,ranked[1].d];
+  if(losingZone.includes(top2[0])||losingZone.includes(top2[1])) return null;
+  const lp=losingZone.map(d=>counts[d]/total*100);
+  if(lp.filter(p=>p<CONF_THRESH).length<2) return null;
+  return{symbol,contractType,barrier,confidence:100-lp.reduce((a,b)=>a+b,0)};
+}
+function bestRecovery(){return MARKETS.map(m=>evalMarket(m.symbol)).filter(Boolean).sort((a,b)=>b.confidence-a.confidence)[0]||null;}
+function fireRecovery(c){
+  recoveryLock=true;
+  placeTrade(c.symbol,c.contractType,c.barrier,currentStake,` · ${c.confidence.toFixed(1)}%`).then(({won,error})=>{
+    recoveryLock=false;if(error) return;if(checkTPSL()) return;
+    if(won){mode='DIFFERS';currentStake=baseStake;updateStatusUI();}
+    else{currentStake=roundStake(currentStake*Number($('martingale').value));updateStatusUI();}
+  });
+}
+function roundStake(v){return Math.max(0.35,Math.round(v*100)/100);}
+function checkTPSL(){
+  const tp=Number($('tp').value),sl=Number($('sl').value);
+  if(tp>0&&sessionPL>=tp){stopBot(`Take profit +${sessionPL.toFixed(2)}`);return true;}
+  if(sl>0&&sessionPL<=-sl){stopBot(`Stop loss ${sessionPL.toFixed(2)}`);return true;}
+  return false;
+}
+function updateStatusUI(){
+  $('modeTag').textContent=mode;$('modeTag').className=`mode-tag mode-${mode}`;
+  $('nextStake').textContent=`${currentStake.toFixed(2)} ${accountCurrency}`;
+  $('plVal').textContent=sessionPL.toFixed(2);$('plVal').className='v '+(sessionPL>=0?'pos':'neg');
+  $('tradeCount').textContent=tradeCount;
+}
+function addLog(errMsg,mode_,symbol,contract,stake,profit){
+  const tr=document.createElement('tr');const t=new Date().toLocaleTimeString();
+  if(errMsg){tr.innerHTML=`<td>${t}</td><td colspan="5" class="loss">${errMsg}</td>`;}
+  else{const cl=profit>=0?'win':'loss';tr.innerHTML=`<td>${t}</td><td><span class="b-${mode_}">${mode_}</span></td><td>${symbol}</td><td>${contract}</td><td>${stake.toFixed(2)}</td><td class="${cl}">${profit>=0?'+':''}${profit.toFixed(2)}</td>`;}
+  $('logBody').prepend(tr);
+}
+function stopBot(reason){running=false;mode='IDLE';$('startBtn').disabled=false;$('stopBtn').disabled=true;updateStatusUI();addLog(reason,'IDLE','-','-',0,0);}
+
+$('oauthLoginBtn').addEventListener('click',oauthPopup);
+$('connectBtn').addEventListener('click',()=>{if(publicSock.ws) publicSock.ws.close();if(tradeSock.ws) tradeSock.ws.close();connect();});
+$('useDemoBtn').addEventListener('click',async()=>{activeAccount='demo';$('useDemoBtn').classList.add('active');$('useRealBtn').classList.remove('active');if(tradeSock.ws&&tradeSock.ws.readyState===1) await authorizeActive();});
+$('useRealBtn').addEventListener('click',async()=>{activeAccount='real';$('useRealBtn').classList.add('active');$('useDemoBtn').classList.remove('active');if(tradeSock.ws&&tradeSock.ws.readyState===1) await authorizeActive();});
+marketSelect.addEventListener('change',async()=>{localStorage.setItem('differs_symbol',marketSelect.value);if(publicSock.ws&&publicSock.ws.readyState===1){await loadHistory(marketSelect.value);refreshBotUI();}});
+$('startBtn').addEventListener('click',()=>{baseStake=Number($('stake').value);currentStake=baseStake;sessionPL=0;tradeCount=0;mode='DIFFERS';running=true;$('startBtn').disabled=true;$('stopBtn').disabled=false;updateStatusUI();});
+$('stopBtn').addEventListener('click',()=>stopBot('Stopped by user'));
+
+if(parseOAuthRedirect()) updateOauthUI();
+bootPublicData();
+if(oauthTokens.demo||oauthTokens.real) connect();
+updateStatusUI();
+// Hide page-nav when running inside the dashboard
+if(window.top!==window){const n=document.querySelector('.page-nav');if(n) n.style.display='none';}
+</script>
+</body>
+</html>

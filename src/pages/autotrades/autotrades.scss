@@ -1,0 +1,111 @@
+.autotrades {
+    display: flex;
+    height: calc(100vh - 140px);
+    min-height: 500px;
+    background: var(--general-main-1);
+
+    &__sidebar {
+        width: 260px;
+        flex-shrink: 0;
+        border-right: 1px solid var(--border-normal);
+        padding: 16px 12px;
+        overflow-y: auto;
+    }
+
+    &__sidebar-title {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-less-prominent);
+        padding: 0 8px 12px;
+    }
+
+    &__bot-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 12px 12px;
+        margin-bottom: 6px;
+        background: var(--general-section-1);
+        border: 1px solid transparent;
+        border-radius: 8px;
+        color: var(--text-general);
+        font-size: 13px;
+        font-weight: 600;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.15s ease;
+
+        &:hover {
+            border-color: var(--brand-red-coral);
+        }
+
+        &--active {
+            background: rgba(255, 68, 68, 0.12);
+            border-color: var(--brand-red-coral);
+            color: var(--brand-red-coral);
+        }
+    }
+
+    &__bot-icon {
+        font-size: 18px;
+        line-height: 1;
+    }
+
+    &__bot-placeholder {
+        margin-top: 8px;
+        padding: 12px 8px;
+        font-size: 12px;
+        color: var(--text-less-prominent);
+        border: 1px dashed var(--border-normal);
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    &__main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__empty {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: var(--text-less-prominent);
+
+        span:first-child {
+            font-size: 40px;
+        }
+    }
+
+    &__iframe {
+        flex: 1;
+        width: 100%;
+        border: none;
+    }
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+        height: auto;
+
+        &__sidebar {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid var(--border-normal);
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+        }
+
+        &__iframe {
+            height: 80vh;
+        }
+    }
+}
